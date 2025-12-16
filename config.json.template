@@ -1,0 +1,8 @@
+{
+  "sentinel_workspace_id": "YOUR_WORKSPACE_ID_HERE",
+  "tenant_id": "YOUR_TENANT_ID_HERE",
+  "ipinfo_token": null,
+  "abuseipdb_token": null,
+  "vpnapi_token": null,
+  "output_dir": "reports"
+}

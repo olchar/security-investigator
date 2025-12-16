@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Sensitive configuration
+config.json
+
+# Investigation data and reports (sensitive)
+# Keep the directories but ignore their contents
+temp/*
+!temp/.gitkeep
+!temp/investigation_sample_jsmith.json
+reports/*
+!reports/.gitkeep
+!reports/Investigation_Report_Sample_jsmith.html
+!reports/Investigation_Report_Compact_SCRUBBED_2025-12-14_134316.html
+!reports/Honeypot_Executive_Report_SCRUBBED_2025-12-14.md
+archive/
+
+# Authoring (blog drafts and style guides)
+authoring/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Environment variables
+.env
+.env.local
