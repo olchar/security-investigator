@@ -78,6 +78,28 @@ As this job does regular queries of the AADNonInteractiveSignInLogs and SigninLo
 
 ---
 
+## 🤖 Agent Skills (VS Code Copilot)
+
+This system uses **[VS Code Agent Skills](https://code.visualstudio.com/docs/copilot/customization/agent-skills)** to provide modular, domain-specific investigation workflows. Skills are automatically detected based on keywords in your prompts.
+
+| Skill | Description | Trigger Keywords |
+|-------|-------------|------------------|
+| **[user-investigation](/.github/skills/user-investigation/SKILL.md)** | Azure AD user security analysis: sign-ins, anomalies, MFA, devices, audit logs, incidents, Identity Protection, HTML reports | "investigate user", "security investigation", "check user activity", UPN/email |
+| **[honeypot-investigation](/.github/skills/honeypot-investigation/SKILL.md)** | Honeypot security analysis: attack patterns, threat intel, vulnerabilities, executive reports | "honeypot", "attack analysis", "threat actor" |
+| **[kql-query-authoring](/.github/skills/kql-query-authoring/SKILL.md)** | KQL query creation using schema validation, community examples, Microsoft Learn | "write KQL", "create KQL query", "help with KQL", "query [table]" |
+| **[authentication-tracing](/.github/skills/authentication-tracing/SKILL.md)** | Azure AD authentication chain forensics: SessionId analysis, token reuse vs interactive MFA, geographic anomaly investigation | "trace authentication", "SessionId analysis", "token reuse", "geographic anomaly" |
+| **[ca-policy-investigation](/.github/skills/ca-policy-investigation/SKILL.md)** | Conditional Access policy forensics: sign-in failure correlation, policy state changes, security bypass detection | "Conditional Access", "CA policy", "device compliance", "policy bypass" |
+
+**How Skills Work:**
+1. You ask Copilot a question (e.g., "Investigate user@domain.com for the last 7 days")
+2. Copilot detects keywords and loads the appropriate skill from `.github/skills/<skill-name>/SKILL.md`
+3. The skill provides specialized workflow, KQL queries, and risk assessment criteria
+4. Universal patterns from `.github/copilot-instructions.md` are inherited automatically
+
+**📖 Reference:** [GitHub Agent Skills Documentation](https://docs.github.com/en/copilot/concepts/agents/about-agent-skills)
+
+---
+
 ## 📁 Project Structure
 
 ```
@@ -90,10 +112,18 @@ security-investigator/
 ├── config.json                  # Configuration (workspace IDs, tokens)
 ├── requirements.txt             # Python dependencies
 ├── .github/
-│   └── copilot-instructions.md  # GitHub Copilot MCP integration guide (CRITICAL - read this)
-├── agents/
-│   └── honeypotInvestigation/
-│       └── AGENTS.md            # Honeypot investigation workflow and KQL queries
+│   ├── copilot-instructions.md  # GitHub Copilot integration guide (skill detection, universal patterns)
+│   └── skills/                  # VS Code Agent Skills (modular investigation workflows)
+│       ├── authentication-tracing/
+│       │   └── SKILL.md         # SessionId forensics, token reuse vs MFA analysis
+│       ├── ca-policy-investigation/
+│       │   └── SKILL.md         # Conditional Access policy forensics
+│       ├── honeypot-investigation/
+│       │   └── SKILL.md         # Attack pattern analysis, threat intel correlation
+│       ├── kql-query-authoring/
+│       │   └── SKILL.md         # Schema-validated KQL query generation
+│       └── user-investigation/
+│           └── SKILL.md         # Comprehensive user security analysis
 ├── docs/
 │   ├── Signinlogs_Anomalies_KQL_CL.md  # Anomaly table setup (REQUIRED PREREQUISITE)
 │   ├── IDENTITY_PROTECTION.md          # Graph Identity Protection integration
@@ -618,7 +648,7 @@ Copilot will:
 
 ## 🤖 GitHub Copilot Integration
 
-This system is **designed for GitHub Copilot MCP integration**. The `.github/copilot-instructions.md` file provides comprehensive investigation workflows, sample KQL queries, and risk assessment frameworks.
+This system is **designed for GitHub Copilot MCP integration** using **[VS Code Agent Skills](https://code.visualstudio.com/docs/copilot/customization/agent-skills)**. Investigation workflows are modularized into 5 specialized skills in `.github/skills/`, with universal patterns and skill detection logic in `.github/copilot-instructions.md`.
 
 ### Natural Language Investigation Prompts:
 
@@ -669,13 +699,17 @@ Was MFA used for those authentications?
 - **Token management** - Never echoes JSON in chat (avoids token limits)
 
 **See `.github/copilot-instructions.md` for:**
-- Complete MCP workflow (Phase 1-5)
-- Sample KQL queries (proven working, production-validated)
-- IP enrichment data structure (JSON field reference)
-- Authentication analysis patterns (SessionId tracing, MFA detection)
-- Risk assessment framework (when to escalate)
-- Date range handling rules (timezone offset logic)
+- Skill detection keywords and routing logic
+- Universal patterns (date ranges, token management, follow-up analysis)
+- Available skills table with trigger keywords
 - Troubleshooting guide (common errors and solutions)
+
+**See `.github/skills/` for specialized workflows:**
+- `user-investigation/SKILL.md` - Complete user security investigation workflow (Phase 1-5)
+- `honeypot-investigation/SKILL.md` - Attack pattern analysis and threat intel correlation
+- `kql-query-authoring/SKILL.md` - Schema-validated KQL query generation
+- `authentication-tracing/SKILL.md` - SessionId forensics, token reuse vs MFA analysis
+- `ca-policy-investigation/SKILL.md` - Conditional Access policy bypass detection
 
 ---
 
@@ -1145,7 +1179,8 @@ Special thanks to the Microsoft Security community for sharing KQL queries and d
 5. **Review report** - Open HTML file in browser
 
 **For detailed workflows, sample KQL queries, and troubleshooting:**
-→ Read [.github/copilot-instructions.md](.github/copilot-instructions.md)
+→ Read [.github/copilot-instructions.md](.github/copilot-instructions.md) (universal patterns, skill detection)
+→ Browse [.github/skills/](.github/skills/) (5 specialized investigation workflows)
 
 ---
 
