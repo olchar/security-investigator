@@ -1,13 +1,13 @@
 ---
 name: user-investigation
-description: Use this skill when asked to investigate a user account for security issues, suspicious activity, or compliance review. Triggers on keywords like "investigate user", "security investigation", "user investigation", "check user activity", "analyze sign-ins", or when a UPN/email is mentioned with investigation context. This skill provides comprehensive Azure AD user security analysis including sign-in anomalies, MFA status, device compliance, audit logs, security incidents, Identity Protection risk, and automated HTML reports.
+description: Use this skill when asked to investigate a user account for security issues, suspicious activity, or compliance review. Triggers on keywords like "investigate user", "security investigation", "user investigation", "check user activity", "analyze sign-ins", or when a UPN/email is mentioned with investigation context. This skill provides comprehensive Entra ID user security analysis including sign-in anomalies, MFA status, device compliance, audit logs, security incidents, Identity Protection risk, and automated HTML reports.
 ---
 
 # User Security Investigation - Instructions
 
 ## Purpose
 
-This skill performs comprehensive security investigations on Azure AD user accounts, analyzing sign-in patterns, anomalies, MFA status, device compliance, audit logs, Office 365 activity, security incidents, and Identity Protection risk signals.
+This skill performs comprehensive security investigations on Entra ID user accounts, analyzing sign-in patterns, anomalies, MFA status, device compliance, audit logs, Office 365 activity, security incidents, and Identity Protection risk signals.
 
 ---
 
@@ -120,7 +120,7 @@ When a user requests a security investigation:
 ### Phase 1: Get User ID and SID (REQUIRED FIRST)
 
 ```
-- Get user Object ID (Azure AD) and onPremisesSecurityIdentifier (Windows SID) from Microsoft Graph
+- Get user Object ID (Entra ID) and onPremisesSecurityIdentifier (Windows SID) from Microsoft Graph
 - Query: /v1.0/users/<UPN>?$select=id,onPremisesSecurityIdentifier
 ```
 
@@ -459,7 +459,7 @@ most_recent_signins
     MinPriority == 2 and AllAuthDetails has "Correct password", "Correct password",
     MinPriority == 2 and AllAuthDetails has "Passkey (device-bound)", "Passkey (device-bound)",
     MinPriority == 3 and AllAuthDetails has "First factor requirement satisfied by claim in the token", "First factor requirement satisfied by claim in the token",
-    MinPriority == 4 and AllAuthDetails has "MFA required in Azure AD", "MFA required in Azure AD",
+    MinPriority == 4 and AllAuthDetails has "MFA required in Entra ID", "MFA required in Entra ID",
     tostring(AllAuthDetails[0]))
 | join kind=inner (
     union isfuzzy=true SigninLogs, AADNonInteractiveUserSignInLogs
@@ -478,7 +478,7 @@ most_recent_signins
 | order by SignInCount desc
 ```
 
-### 4. Azure AD Audit Log Activity (Aggregated Summary)
+### 4. Entra ID Audit Log Activity (Aggregated Summary)
 ```kql
 AuditLogs
 | where TimeGenerated between (datetime(<StartDate>) .. datetime(<EndDate>))

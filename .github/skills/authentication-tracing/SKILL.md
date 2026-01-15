@@ -1,13 +1,13 @@
 ---
 name: authentication-tracing
-description: Use this skill when asked to trace authentication flows, analyze SessionId chains, investigate token reuse vs interactive MFA, or assess geographic anomalies in sign-ins. Triggers on keywords like "trace authentication", "trace back to interactive MFA", "SessionId analysis", "token reuse", "geographic anomaly", "impossible travel", or when investigating suspicious sign-in locations. This skill provides forensic analysis of Azure AD authentication chains to distinguish legitimate activity from credential/token theft.
+description: Use this skill when asked to trace authentication flows, analyze SessionId chains, investigate token reuse vs interactive MFA, or assess geographic anomalies in sign-ins. Triggers on keywords like "trace authentication", "trace back to interactive MFA", "SessionId analysis", "token reuse", "geographic anomaly", "impossible travel", or when investigating suspicious sign-in locations. This skill provides forensic analysis of Entra ID authentication chains to distinguish legitimate activity from credential/token theft.
 ---
 
 # Authentication Tracing - Instructions
 
 ## Purpose
 
-This skill performs forensic analysis of Azure AD authentication flows to determine whether anomalous sign-ins represent:
+This skill performs forensic analysis of Entra ID authentication flows to determine whether anomalous sign-ins represent:
 - **Legitimate activity** (VPN usage, user travel, mobile carrier routing)
 - **Token theft/credential compromise** (stolen refresh tokens, session hijacking)
 

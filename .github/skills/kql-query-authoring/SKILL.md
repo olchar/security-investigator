@@ -550,7 +550,7 @@ mcp_sentinel-data_query_lake(
 **Input:**
 ```json
 {
-  "query": "sign-in authentication Azure AD user activity",
+  "query": "sign-in authentication Entra ID user activity",
   "workspaceId": "optional-workspace-guid-if-multiple"
 }
 ```
