@@ -844,8 +844,8 @@ A Model Context Protocol server that searches GitHub for KQL queries using natur
 
 **Tools provided (34 total):**
 - **Schema Intelligence (8 tools):** `get_table_schema`, `search_tables`, `list_table_categories`, `get_tables_by_category`, `generate_query_template`, `generate_query_from_natural_language`, `find_column`, `get_schema_statistics`
-- **Query Validation (5 tools):** `generate_kql_query`, `validate_kql_query`, `get_query_documentation`, `check_microsoft_docs_mcp`, `search_github_examples_fallback`
-- **GitHub Search (8 tools):** `search_kql_queries`, `get_kql_from_file`, `search_kql_repositories`, `get_rate_limit`, `search_repo_kql_queries`, `search_user_kql_queries`, `search_favorite_repos`, `get_cache_stats`
+- **Query Validation (5 tools):** `generate_kql_query`, `validate_kql_query`, `get_query_documentation`, `check_microsoft_docs_mcp`, `search_github_examples_fallback` ✅
+- **GitHub Search (8 tools):** `search_github_examples_fallback` ✅ (recommended), `get_kql_from_file`, `search_kql_repositories`, `get_rate_limit`, `search_repo_kql_queries`, `search_user_kql_queries`, `search_favorite_repos` ❌ (bug in v1.0.5), `get_cache_stats`
 - **ASIM Schema (13 tools):** `list_asim_schemas`, `get_asim_schema_info`, `get_asim_field_info`, `generate_asim_query_template`, `validate_asim_parser`, `compare_parser_to_schema`, and more
 
 **Key Features:**

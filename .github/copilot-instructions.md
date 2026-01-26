@@ -120,7 +120,7 @@ Incident investigation and threat hunting tools for Defender XDR and Sentinel:
 
 ### KQL Search MCP
 GitHub-powered KQL query discovery and schema intelligence (331+ tables from Defender XDR, Sentinel, Azure Monitor):
-- **GitHub Query Discovery**: Search all public repos for KQL queries using natural language (`search_kql_queries`), extract queries from specific files (`get_kql_from_file`), search favorite repos (`search_favorite_repos`)
+- **GitHub Query Discovery**: Search GitHub for KQL examples (`search_github_examples_fallback` ✅), find repos (`search_kql_repositories` ✅), extract from files (`get_kql_from_file` ✅). **Note:** `search_favorite_repos` has a known bug (v1.0.5) - use `search_github_examples_fallback` instead.
 - **Schema Intelligence**: Get table schemas (`get_table_schema`), search tables by description (`search_tables`), find columns (`find_column`), list categories (`list_table_categories`)
 - **Query Generation & Validation**: Generate validated KQL queries from natural language (`generate_kql_query`), validate existing queries (`validate_kql_query`), get Microsoft Learn docs (`get_query_documentation`)
 - **ASIM Schema Support**: Search/validate/generate queries for 11 ASIM schemas (`search_asim_schemas`, `get_asim_schema_info`, `validate_asim_parser`, `generate_asim_query_template`)

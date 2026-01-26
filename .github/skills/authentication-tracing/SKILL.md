@@ -415,12 +415,14 @@ The **same SessionId** requires careful analysis because:
 |----------|-------------|-----------------|
 | **Legitimate VPN Connection** | User switched VPN exit nodes (same device, different apparent location) | **Requires user confirmation** |
 | **Legitimate User Travel** | User traveled between locations with sufficient time gap (tokens remained valid) | **Requires user confirmation** |
+| **Multi-Device User** | User has laptop + phone active simultaneously (different IPs, concurrent activity) | **Check UserAgent for mobile vs desktop - Requires user confirmation** |
 | **Stolen Token Replay** | Attacker obtained refresh token (SessionId stays same, may show different UserAgent) | **Cannot be ruled out by SessionId alone** |
 | **Mobile Carrier Routing** | Carrier routes traffic through regional gateways (device in one location, exits another) | **Check IP enrichment for ISP org** |
 
 ### Additional Investigation Checklist
 
 - ✅ Check UserAgent consistency across all sessions
+- ✅ **Distinguish mobile vs desktop UserAgents** - Concurrent activity from different device types (e.g., Android Chrome + Windows Edge) may indicate legitimate multi-device usage, not token theft
 - ✅ Verify geographic progression is physically possible  
 - ✅ Review applications accessed (any unusual admin tools?)
 - ✅ Check for failed authentication attempts before success
@@ -439,8 +441,9 @@ The **same SessionId** requires careful analysis because:
 
 1. "Were you using a VPN on [date] around [time]?" (if `is_vpn: true`)
 2. "Did you travel between [Location A] and [Location B] during this timeframe?"
-3. "Do you recognize [applications] activity during this timeframe?"
-4. "Have you noticed any unusual device or account behavior recently?"
+3. "Were you using multiple devices (e.g., laptop and phone) at the same time?" (if concurrent activity with different UserAgents detected)
+4. "Do you recognize [applications] activity during this timeframe?"
+5. "Have you noticed any unusual device or account behavior recently?"
 
 **Only after user confirmation** can you conclude VPN usage or travel is legitimate. **Same SessionId + IP enrichment data together provide strong evidence, but user confirmation is still required.**
 
@@ -466,7 +469,8 @@ The **same SessionId** requires careful analysis because:
 
 - Token reuse from geographically impossible locations (regardless of SessionId)
 - Token reuse after user reports device loss/theft
-- Concurrent sessions from multiple countries simultaneously
+- Concurrent sessions from multiple countries simultaneously **with same UserAgent** (same device can't be in two places)
+- **Note:** Concurrent activity with **different UserAgents** (mobile vs desktop) may indicate legitimate multi-device usage - verify before escalating
 - Token reuse from IPs matching ThreatIntelIndicators OR `threat_detected: true` in IP enrichment
 - Unusual application access (admin portals, sensitive resources not in user's normal pattern)
 - Failed authentication attempts followed by successful token reuse
@@ -478,6 +482,7 @@ The **same SessionId** requires careful analysis because:
 ### Medium Risk (Investigate Further - Confirm with User)
 
 - **Same SessionId + Geographically distant locations** = Could be VPN/travel OR token theft - VERIFY with IP enrichment
+- **Concurrent activity from different IPs with different UserAgents** = Could be multi-device (laptop + phone) OR token theft - ASK user about device usage
 - Token reuse from unexpected country without prior user notification
 - Token reuse spanning >30 days (excessive token lifetime - increases theft window)
 - Pattern of token-only authentications without any interactive MFA in 30+ days
@@ -505,7 +510,9 @@ The **same SessionId** requires careful analysis because:
 2. **Use SessionId to trace complete chain** - Single query shows entire authentication progression
 3. **Check IP enrichment data** - Use investigation JSON `ip_enrichment` array for VPN, abuse scores, threat intel
 4. **Verify device consistency** - Same SessionId + Same UserAgent + Geographic reasonableness = Likely legitimate
-5. **SessionId alone is NOT conclusive** - Must correlate with UserAgent, geography, behavior, and user confirmation
+5. **Check for multi-device scenarios** - Different UserAgents (mobile vs desktop) with concurrent activity often indicates legitimate multi-device usage, not token theft. Users commonly work on laptop while checking email on phone.
+6. **Concurrent activity ≠ Automatic compromise** - Before concluding token theft from concurrent sessions, verify UserAgent differences and ask user about device usage patterns
+7. **SessionId alone is NOT conclusive** - Must correlate with UserAgent, geography, behavior, and user confirmation
 6. **Check first authentication in session** - RequestSeq > 0 shows where user performed interactive MFA
 7. **Assess geographic progression** - Evaluate if travel is physically possible or if VPN is likely
 8. **Widen time ranges if needed** - Tokens can be valid for 24-90 days depending on policy

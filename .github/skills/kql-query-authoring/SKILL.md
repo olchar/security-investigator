@@ -38,16 +38,42 @@ Without these MCP servers, this skill cannot access schema information or offici
 
 ---
 
+## ⚠️ Known Issues
+
+### `search_favorite_repos` Bug (as of v1.0.5)
+
+**Status:** ❌ Broken - GitHub API query parsing fails with any query
+
+**Error:** `ERROR_TYPE_QUERY_PARSING_FATAL unable to parse query!`
+
+**Affected Tool:** `mcp_kql-search_search_favorite_repos`
+
+**Root Cause:** Bug in query construction when building GitHub Code Search API request, even with valid `GITHUB_TOKEN` and `FAVORITE_REPOS` configuration.
+
+**Workarounds - Use these tools instead:**
+
+| Tool | Status | Use Case |
+|------|--------|----------|
+| `mcp_kql-search_search_github_examples_fallback` | ✅ Works | Search all public repos for KQL examples |
+| `mcp_microsoft-lea_microsoft_code_sample_search` | ✅ Works | Official Microsoft Learn code samples |
+| `mcp_kql-search_get_table_schema` | ✅ Works | Schema validation with example queries |
+| `mcp_kql-search_search_kql_repositories` | ✅ Works | Find repos containing KQL queries |
+
+**Issue Tracking:** Report to [noodlemctwoodle/kql-search-mcp](https://github.com/noodlemctwoodle/kql-search-mcp/issues)
+
+---
+
 ## 📑 TABLE OF CONTENTS
 
 1. **[Prerequisites](#prerequisites)** - Required MCP servers
-2. **[Critical Workflow Rules](#-critical-workflow-rules---read-first-)** - Start here!
-3. **[Query Authoring Workflow](#query-authoring-workflow)** - Step-by-step process
-4. **[Tool Reference](#tool-reference)** - Available MCP tools
-5. **[Query Patterns](#common-query-patterns)** - By use case
-6. **[Schema Differences](#critical-schema-differences)** - Sentinel vs XDR
-7. **[Validation Rules](#validation-rules)** - Quality checks
-8. **[Best Practices](#best-practices)** - Performance & security
+2. **[Known Issues](#-known-issues)** - Bug reports and workarounds
+3. **[Critical Workflow Rules](#-critical-workflow-rules---read-first-)** - Start here!
+4. **[Query Authoring Workflow](#query-authoring-workflow)** - Step-by-step process
+5. **[Tool Reference](#tool-reference)** - Available MCP tools
+6. **[Query Patterns](#common-query-patterns)** - By use case
+7. **[Schema Differences](#critical-schema-differences)** - Sentinel vs XDR
+8. **[Validation Rules](#validation-rules)** - Quality checks
+9. **[Best Practices](#best-practices)** - Performance & security
 
 ---
 
@@ -148,13 +174,21 @@ mcp_microsoft-lea_microsoft_code_sample_search(
 
 ### Step 4: Get Community Examples
 
+**⚠️ NOTE:** The `search_favorite_repos` tool has a known bug (see [Known Issues](#-known-issues)). Use the fallback tool instead.
+
 **Search GitHub for real-world implementations:**
 
 ```
-mcp_kql-search_search_kql_queries(
-  query: "Natural language description of query goal",
-  max_results: 10,
-  include_context: true
+mcp_kql-search_search_github_examples_fallback(
+  table_name: "EmailEvents",
+  description: "Natural language description of query goal"
+)
+```
+
+**Alternative - Search for KQL repositories:**
+```
+mcp_kql-search_search_kql_repositories(
+  query: "sentinel detection hunting"
 )
 ```
 
@@ -460,30 +494,61 @@ queries/email_threat_hunting_queries.md
 
 ---
 
-### mcp_kql-search_search_kql_queries
+### mcp_kql-search_search_github_examples_fallback ✅ (RECOMMENDED)
 
-**Purpose:** Search GitHub for community KQL queries
+**Purpose:** Search all public GitHub repos for KQL query examples by table name
 
 **When to use:**
-- Need real-world examples
-- Looking for detection rules
-- Want to see multiple approaches
-- Need advanced techniques
+- Need real-world query examples for a specific table
+- `search_favorite_repos` is broken (see [Known Issues](#-known-issues))
+- Looking for detection rules and community patterns
+- Want unvalidated examples from the community
 
 **Input:**
 ```json
 {
-  "query": "EmailEvents mail flow statistics spam threats phishing malware",
-  "max_results": 10,
-  "include_context": true
+  "table_name": "SecurityIncident",
+  "description": "summarize by status classification severity"
 }
 ```
 
 **Returns:**
-- Ranked query matches
-- Surrounding documentation
-- Repository context
-- Relevance scores
+- Query examples from GitHub repositories
+- Repository and file path context
+- Raw KQL code (unvalidated - verify before use)
+
+---
+
+### mcp_kql-search_search_favorite_repos ❌ (BROKEN)
+
+**Status:** ❌ Known bug as of v1.0.5 - do not use
+
+**Error:** `ERROR_TYPE_QUERY_PARSING_FATAL unable to parse query!`
+
+**Use instead:** `mcp_kql-search_search_github_examples_fallback` or `mcp_microsoft-lea_microsoft_code_sample_search`
+
+---
+
+### mcp_kql-search_search_kql_repositories ✅
+
+**Purpose:** Find GitHub repositories containing KQL queries
+
+**When to use:**
+- Looking for well-maintained KQL query collections
+- Want to discover new query sources
+- Finding repos sorted by stars
+
+**Input:**
+```json
+{
+  "query": "sentinel detection hunting"
+}
+```
+
+**Returns:**
+- Repository list sorted by stars
+- Repository descriptions
+- Links to explore further
 
 ---
 
@@ -1307,9 +1372,9 @@ mcp_microsoft-lea_microsoft_code_sample_search(
 
 ### Step 3: Get Community Examples
 ```
-mcp_kql-search_search_kql_queries(
-  query: "EmailEvents phishing detection delivered",
-  max_results: 5
+mcp_kql-search_search_github_examples_fallback(
+  table_name: "EmailEvents",
+  description: "phishing detection delivered"
 )
 ```
 
