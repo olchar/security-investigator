@@ -33,6 +33,53 @@ This skill performs comprehensive security investigations on Entra ID user accou
 3. **ALWAYS track and report time after each major step** (mandatory)
 4. **ALWAYS run independent queries in parallel** (drastically faster execution)
 5. **ALWAYS use `create_file` for JSON export** (NEVER use PowerShell terminal commands)
+6. **⛔ ALWAYS enforce Sentinel workspace selection** (see Workspace Selection section below)
+
+---
+
+## ⛔ MANDATORY: Sentinel Workspace Selection
+
+**This skill requires a Sentinel workspace to execute queries. Follow these rules STRICTLY:**
+
+### When invoked from incident-investigation skill:
+- Inherit the workspace selection from the parent investigation context
+- If no workspace was selected in parent context: **STOP and ask user to select**
+- Use the `SELECTED_WORKSPACE_IDS` passed from the parent skill
+
+### When invoked standalone (direct user request):
+1. **ALWAYS call `mcp_stefanpe-sent2_list_sentinel_workspaces()` FIRST**
+2. **If 1 workspace exists:** Auto-select, display to user, proceed
+3. **If multiple workspaces exist:**
+   - Display all workspaces with Name and ID
+   - ASK: "Which Sentinel workspace should I use for this investigation?"
+   - **⛔ STOP AND WAIT** for user response
+   - **⛔ DO NOT proceed until user explicitly selects**
+4. **If a query fails on the selected workspace:**
+   - **⛔ DO NOT automatically try another workspace**
+   - STOP and report the error
+   - Display available workspaces
+   - ASK user to select a different workspace
+   - WAIT for user response
+
+### Workspace Failure Handling
+
+```
+IF query returns "Failed to resolve table" or similar error:
+    - STOP IMMEDIATELY
+    - Report: "⚠️ Query failed on workspace [NAME] ([ID]). Error: [ERROR_MESSAGE]"
+    - Display: "Available workspaces: [LIST_ALL_WORKSPACES]"
+    - ASK: "Which workspace should I use instead?"
+    - WAIT for explicit user response
+    - DO NOT retry with a different workspace automatically
+```
+
+**🔴 PROHIBITED ACTIONS:**
+- ❌ Selecting a workspace without user consent when multiple exist
+- ❌ Switching to another workspace after a failure without asking
+- ❌ Proceeding with investigation if workspace selection is ambiguous
+- ❌ Assuming a workspace based on previous sessions
+
+---
 
 **Date Range Rules:**
 - **Real-time/recent searches:** Add +2 days to current date for end range

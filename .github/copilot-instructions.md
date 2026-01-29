@@ -23,7 +23,10 @@ This workspace contains a security investigation automation system. GitHub Copil
 
 | Keywords in Request | Action Required |
 |---------------------|-----------------|
+| **"investigate incident"**, "incident ID", "incident investigation", "analyze incident", "triage incident", incident number with investigation context | Use the **incident-investigation** skill at `.github/skills/incident-investigation/SKILL.md` |
 | **"investigate user"**, "security investigation", "check user activity", UPN/email with investigation context | Use the **user-investigation** skill at `.github/skills/user-investigation/SKILL.md` |
+| **"investigate computer"**, "investigate device", "investigate endpoint", "check machine", "device security", hostname with investigation context | Use the **computer-investigation** skill at `.github/skills/computer-investigation/SKILL.md` |
+| **"investigate IP"**, "investigate domain", "investigate URL", "investigate hash", "IoC investigation", "is this malicious", "threat intel", "check if [IP/domain/URL] is malicious", IP address or domain with investigation context | Use the **ioc-investigation** skill at `.github/skills/ioc-investigation/SKILL.md` |
 | **"honeypot"**, "attack analysis", "threat actor" | Use the **honeypot-investigation** skill at `.github/skills/honeypot-investigation/SKILL.md` |
 | **"write KQL"**, "create KQL query", "help with KQL", "query [table]", "KQL for [scenario]" | Use the **kql-query-authoring** skill at `.github/skills/kql-query-authoring/SKILL.md` |
 | **"trace authentication"**, "trace back to interactive MFA", "SessionId analysis", "token reuse", "geographic anomaly", "impossible travel" | Use the **authentication-tracing** skill at `.github/skills/authentication-tracing/SKILL.md` |
@@ -37,11 +40,57 @@ This workspace contains a security investigation automation system. GitHub Copil
 
 ---
 
+## 🔴 SENTINEL WORKSPACE SELECTION - GLOBAL RULE
+
+**This rule applies to ALL skills and ALL Sentinel queries. Follow STRICTLY.**
+
+When executing ANY Sentinel query (via `mcp_stefanpe-sent2_query_lake`, `mcp_microsoft_sen_query_lake`, etc.):
+
+### Workspace Selection Flow
+
+1. **BEFORE first query:** Call `list_sentinel_workspaces()` to enumerate available workspaces
+2. **If exactly 1 workspace:** Auto-select, display to user, proceed
+3. **If multiple workspaces AND no prior selection in session:**
+   - Display ALL workspaces with Name and ID
+   - ASK user: "Which Sentinel workspace should I use for this investigation? Select one or more, or 'all'."
+   - **⛔ STOP AND WAIT** for explicit user response
+   - **⛔ DO NOT proceed until user selects**
+4. **If query fails on selected workspace:**
+   - **⛔ STOP IMMEDIATELY**
+   - Report: "⚠️ Query failed on [WORKSPACE_NAME]. Error: [ERROR_MESSAGE]"
+   - Display available workspaces
+   - ASK user to select a different workspace
+   - **⛔ DO NOT automatically retry with another workspace**
+
+### 🔴 PROHIBITED ACTIONS
+
+| Action | Status |
+|--------|--------|
+| Auto-selecting workspace when multiple exist | ❌ **PROHIBITED** |
+| Switching workspaces after query failure without asking | ❌ **PROHIBITED** |
+| Proceeding with ambiguous workspace context | ❌ **PROHIBITED** |
+| Assuming workspace from previous conversation turns | ❌ **PROHIBITED** |
+| Making any workspace decision on behalf of user | ❌ **PROHIBITED** |
+
+### ✅ REQUIRED ACTIONS
+
+| Scenario | Required Action |
+|----------|----------------|
+| Multiple workspaces, none selected | STOP, list all, ASK user, WAIT |
+| Query fails with table/workspace error | STOP, report error, ASK user, WAIT |
+| Single workspace available | Auto-select, DISPLAY to user, proceed |
+| Workspace already selected in session | Reuse selection, DISPLAY which workspace is being used |
+
+---
+
 ## Available Skills
 
 | Skill | Description | Trigger Keywords |
 |-------|-------------|------------------|
+| **incident-investigation** | Comprehensive incident analysis for Defender XDR and Sentinel incidents: criticality assessment, entity extraction, filtering (RFC1918 IPs, tenant domains), recursive entity investigation using specialized skills | "investigate incident", "incident ID", "incident investigation", "analyze incident", "triage incident", incident number |
 | **user-investigation** | Azure AD user security analysis: sign-ins, anomalies, MFA, devices, audit logs, incidents, Identity Protection, HTML reports | "investigate user", "security investigation", "check user activity", UPN/email |
+| **computer-investigation** | Device security analysis for Entra Joined, Hybrid Joined, and Entra Registered devices: Defender alerts, compliance, logged-on users, vulnerabilities, process/network/file events, automated investigations | "investigate computer", "investigate device", "investigate endpoint", "check machine", hostname |
+| **ioc-investigation** | Indicator of Compromise analysis: IP addresses, domains, URLs, file hashes. Includes Defender Threat Intelligence, Sentinel TI tables, CVE correlation, organizational exposure assessment, and affected device enumeration | "investigate IP", "investigate domain", "investigate URL", "investigate hash", "IoC", "is this malicious", "threat intel", IP/domain/URL/hash |
 | **honeypot-investigation** | Honeypot security analysis: attack patterns, threat intel, vulnerabilities, executive reports | "honeypot", "attack analysis", "threat actor" |
 | **kql-query-authoring** | KQL query creation using schema validation, community examples, Microsoft Learn | "write KQL", "create KQL query", "help with KQL", "query [table]" |
 | **authentication-tracing** | Azure AD authentication chain forensics: SessionId analysis, token reuse vs interactive MFA, geographic anomaly investigation, risk assessment | "trace authentication", "trace back to interactive MFA", "SessionId analysis", "token reuse", "geographic anomaly" |

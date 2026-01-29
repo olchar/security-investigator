@@ -1,0 +1,1 @@
+{"@odata.type":"#microsoft.graph.ipNamedLocation","ipRanges":[{"@odata.type":"#microsoft.graph.iPv4CidrRange","cidrAddress":"85.208.79.160/32"}]}
