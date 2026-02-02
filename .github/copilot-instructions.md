@@ -171,6 +171,23 @@ Incident investigation and threat hunting tools for Defender XDR and Sentinel:
 - **When to Use**: Incident triage, threat hunting over your own Defender/Sentinel data, correlating alerts/entities during investigations
 - **Documentation**: https://learn.microsoft.com/en-us/azure/sentinel/datalake/sentinel-mcp-triage-tool
 
+### 🔧 Tool Selection Rule: Data Lake vs Advanced Hunting
+
+**When to use which KQL execution tool:**
+
+| Scenario | Tool to Use |
+|----------|-------------|
+| **Default for most tables** | `mcp_sentinel-data_query_lake` (SigninLogs, AuditLogs, SecurityAlert, SecurityIncident, Device* tables, etc.) |
+| **AzureDiagnostics table** | `RunAdvancedHuntingQuery` **ONLY** - this table is NOT in Sentinel Data Lake |
+| **DeviceTvm* tables** (DeviceTvmSoftwareInventory, DeviceTvmSoftwareVulnerabilities, etc.) | `RunAdvancedHuntingQuery` **ONLY** - TVM snapshot tables are NOT in Sentinel Data Lake |
+| **XDR tables (Device*, Alert*, Email*, etc.)** | Try `mcp_sentinel-data_query_lake` first - these tables exist in Data Lake **only under specific conditions**; otherwise, they won't exist |
+| **Table not found error** | If `mcp_sentinel-data_query_lake` fails with "table not found" or similar error, **retry with `RunAdvancedHuntingQuery`** - the table may exist only in Defender XDR Advanced Hunting |
+
+**Important Notes:**
+- `mcp_sentinel-data_query_lake` uses `TimeGenerated` as timestamp column
+- `RunAdvancedHuntingQuery` uses `Timestamp` as timestamp column (adjust queries accordingly)
+- Always check the error message - "Failed to resolve table" or "table not found" indicates the table doesn't exist in that data source
+
 ### KQL Search MCP
 GitHub-powered KQL query discovery and schema intelligence (331+ tables from Defender XDR, Sentinel, Azure Monitor):
 - **GitHub Query Discovery**: Search GitHub for KQL examples (`search_github_examples_fallback` ✅), find repos (`search_kql_repositories` ✅), extract from files (`get_kql_from_file` ✅). **Note:** `search_favorite_repos` has a known bug (v1.0.5) - use `search_github_examples_fallback` instead.
