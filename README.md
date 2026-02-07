@@ -10,11 +10,13 @@ An investigation automation framework that combines **GitHub Copilot**, **VS Cod
 # 1. Install dependencies
 pip install -r requirements.txt
 
-# 2. Edit config.json with your workspace ID
+# 2. Edit config.json with your workspace ID, tenant ID, and API keys
+#    (see config.json.template for the full list)
 
 # 3. Install the 5 required MCP servers (see MCP Server Setup below)
 
 # 4. Ask GitHub Copilot:
+"What skills do you have access to?"
 "Investigate user@domain.com for the last 7 days"
 ```
 
@@ -237,15 +239,15 @@ pip install -r requirements.txt
 
 ### 2. Configure Environment
 
-Edit `config.json`:
+Copy `config.json.template` to `config.json` and fill in your values:
 
 ```json
 {
   "sentinel_workspace_id": "YOUR_WORKSPACE_ID_HERE",
-  "tenant_id": "your-azure-tenant-id",
-  "ipinfo_token": "your-ipinfo-token",
-  "abuseipdb_token": "your-abuseipdb-token-here",
-  "vpnapi_token": "your-vpnapi-token-here",
+  "tenant_id": "YOUR_TENANT_ID_HERE",
+  "ipinfo_token": null,
+  "abuseipdb_token": null,
+  "vpnapi_token": null,
   "output_dir": "reports"
 }
 ```
@@ -253,10 +255,10 @@ Edit `config.json`:
 | Setting | Required | Description |
 |---------|----------|-------------|
 | `sentinel_workspace_id` | Yes | Microsoft Sentinel (Log Analytics) workspace GUID |
-| `tenant_id` | No | Azure AD tenant ID (auto-detected from auth) |
-| `ipinfo_token` | No | ipinfo.io API token — 50K/month free tier, VPN detection in paid tier |
-| `abuseipdb_token` | No | AbuseIPDB API token — IP reputation scoring (1K/day free) |
-| `vpnapi_token` | No | vpnapi.io API token — VPN/proxy/Tor detection |
+| `tenant_id` | Yes | Azure AD tenant ID for your Sentinel workspace |
+| `ipinfo_token` | Recommended | [ipinfo.io](https://ipinfo.io/) API token — geolocation, ASN, org. Free: 1K/day; token: 50K/month; paid plans include VPN detection |
+| `abuseipdb_token` | Recommended | [AbuseIPDB](https://www.abuseipdb.com/) API token — IP reputation scoring (0-100 confidence). Free: 1K/day |
+| `vpnapi_token` | Optional | [vpnapi.io](https://vpnapi.io/) API token — VPN/proxy/Tor detection. Not needed if ipinfo.io is on a paid plan |
 | `output_dir` | No | Directory for HTML reports (default: `reports`) |
 
 ### 3. Build MCP Apps (Optional — Visualization Skills)
