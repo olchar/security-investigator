@@ -56,7 +56,7 @@ pip install -r requirements.txt
 │  └─────────────┘  └──────────────┘  └───────────────────────────┘  │
 ├────────────────────────────────────────────────────────────────────┤
 │                      Python Utilities                              │
-│  generate_report_from_json.py  │  enrich_ips.py  │  report_generator│
+│ generate_report_from_json.py  │  enrich_ips.py  │  report_generator│
 └────────────────────────────────────────────────────────────────────┘
 ```
 
