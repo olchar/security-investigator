@@ -89,6 +89,16 @@ security-investigator/
 │       │   └── SKILL.md         # Behavioral baseline drift for SPNs and user accounts
 │       └── user-investigation/
 │           └── SKILL.md         # Comprehensive user security analysis
+├── queries/                     # Verified KQL query library (grep-searchable)
+│   ├── app_credential_management.md   # App registration & SPN credential changes
+│   ├── cloudappevents_exploration.md  # Cloud app activity (SaaS, OAuth)
+│   ├── email_threat_detection.md      # MDO tables: phishing, AiTM, BEC, ZAP, efficacy
+│   ├── endpoint_failed_connections.md # Failed outbound connections (C2, exfil)
+│   ├── exposure_graph_attack_paths.md # ExposureGraph critical asset paths
+│   ├── network_anomaly_detection.md   # Network traffic anomalies & beaconing
+│   ├── rare_process_chains.md         # Rare parent→child process chain hunting
+│   ├── rdp_lateral_movement.md        # RDP lateral movement detection
+│   └── service_principal_scope_drift.md # SPN behavioral drift queries
 ├── mcp-apps/                    # Local MCP servers (visualization, automation)
 │   ├── sentinel-geomap-server/  # World map visualization
 │   ├── sentinel-heatmap-server/ # Heatmap visualization
@@ -103,11 +113,23 @@ security-investigator/
 └── archive/                     # Legacy code and design docs
 ```
 
-**Key Files:**
-- **`.github/copilot-instructions.md`** - Complete MCP workflow, KQL query samples, risk assessment framework
-- **`agents/honeypotInvestigation/AGENTS.md`** - Honeypot investigation workflow, KQL queries, report template
-- **`docs/Signinlogs_Anomalies_KQL_CL.md`** - MUST-READ prerequisite setup guide
-- **`generate_report_from_json.py`** - Main report generation script (call this after data collection)
+**Query Library (`queries/`):**
+
+The `queries/` folder contains **verified, battle-tested KQL query collections** organized by detection scenario. These are the **Priority 2 lookup source** in the [KQL Pre-Flight Checklist](.github/copilot-instructions.md) — Copilot searches them before writing any ad-hoc KQL.
+
+Each file uses a standardized metadata header for efficient `grep_search` discovery:
+```markdown
+# <Title>
+**Tables:** <exact KQL table names>
+**Keywords:** <searchable terms — attack techniques, scenarios, field names>
+**MITRE:** <ATT&CK technique IDs, e.g., T1021.001, TA0008>
+```
+
+To find relevant queries, search by table name or keyword:
+```
+grep_search("EmailEvents", includePattern: "queries/**")
+grep_search("lateral movement", includePattern: "queries/**")
+```
 
 ---
 
