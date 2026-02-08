@@ -530,13 +530,37 @@ python enrich_ips.py 8.8.8.8
 
 ---
 
-##  License
+## 📄 License
 
-**Internal use only.** Designed for Microsoft Sentinel customers. Modify freely for internal SOC operations.
+This project is licensed under the [MIT License](LICENSE). Use it, fork it, adapt it for your SOC — just keep the copyright notice.
 
 ---
 
 ## 🙏 Acknowledgments
 
-Built using **Microsoft Sentinel**, **Microsoft Graph API**, **Microsoft Identity Protection**, **ipinfo.io**, **vpnapi.io**, **AbuseIPDB**, **Shodan**, and **GitHub Copilot**. Special thanks to the Microsoft Security community for sharing KQL queries and detection logic.
+### Microsoft Security Platform
+- **[Microsoft Sentinel](https://learn.microsoft.com/en-us/azure/sentinel/)** — SIEM/SOAR platform powering all KQL queries and incident management
+- **[Microsoft Defender XDR](https://learn.microsoft.com/en-us/defender-xdr/)** — Advanced Hunting, device telemetry, vulnerability management
+- **[Microsoft Graph API](https://learn.microsoft.com/en-us/graph/)** — Entra ID identity data, user/group management, role assignments
+- **[Microsoft Entra ID Protection](https://learn.microsoft.com/en-us/entra/id-protection/)** — Risk detections, risky sign-ins, user risk states
+
+### MCP Servers
+- **[Sentinel Data Lake MCP](https://learn.microsoft.com/en-us/azure/sentinel/datalake/)** — KQL query execution against Sentinel workspace
+- **[Sentinel Triage MCP](https://learn.microsoft.com/en-us/azure/sentinel/datalake/sentinel-mcp-triage-tool)** — Incident triage, Advanced Hunting, Defender entity APIs
+- **[MCP Server for Microsoft Graph](https://github.com/nicholasgasior/mcp-server-microsoft-graph)** — Graph API endpoint discovery and execution
+- **[KQL Search MCP](https://www.npmjs.com/package/kql-search-mcp)** — Schema intelligence, GitHub KQL query discovery, ASIM validation
+- **[Microsoft Learn MCP](https://learn.microsoft.com/en-us/training/support/mcp-get-started)** — Official documentation search and code sample retrieval
+
+### Threat Intelligence APIs
+- **[ipinfo.io](https://ipinfo.io/)** — IP geolocation, ISP/ASN identification, hosting provider detection
+- **[vpnapi.io](https://vpnapi.io/)** — VPN, proxy, Tor exit node, and relay detection
+- **[AbuseIPDB](https://www.abuseipdb.com/)** — Community-sourced IP abuse scoring and recent attack reports
+- **[Shodan](https://www.shodan.io/)** — Open port enumeration, service/banner detection, CVE identification, infrastructure tagging
+
+### Development Tools
+- **[GitHub Copilot](https://github.com/features/copilot)** — AI coding assistant powering the natural language investigation interface
+- **[VS Code Agent Skills](https://code.visualstudio.com/docs/copilot/customization/agent-skills)** — Modular skill framework for specialized investigation workflows
+- **[Model Context Protocol (MCP)](https://modelcontextprotocol.io/)** — Open protocol connecting LLMs to external data sources and tools
+
+Special thanks to the Microsoft Security community for sharing KQL queries and detection logic, and to [stefanpems](https://github.com/stefanpems/mcp-add-comment-to-sentinel-incident) for the Sentinel incident commenting MCP pattern.
 
