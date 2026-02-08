@@ -630,7 +630,7 @@ AlertEvidence
     or SHA256 =~ ioc_value
     or FileName has ioc_value
     or Title has ioc_value
-    or Category has ioc_value
+    or Categories has ioc_value
 | project 
     TimeGenerated,
     AlertId,
@@ -664,7 +664,7 @@ AlertEvidence
     or SHA256 =~ ioc_value
     or FileName has ioc_value
     or Title has ioc_value
-    or Category has ioc_value
+    or Categories has ioc_value
 | join AlertInfo on AlertId
 | extend HostFullName = strcat(parse_json(parse_json(AdditionalFields).Host).HostName,".", parse_json(parse_json(AdditionalFields).Host).DnsDomain)
 | extend OS = strcat(parse_json(parse_json(AdditionalFields).Host).OSFamily," ", parse_json(parse_json(AdditionalFields).Host).OSVersion)
@@ -720,7 +720,7 @@ AlertEvidence
     or SHA256 =~ ioc_value
     or FileName has ioc_value
     or Title has ioc_value
-    or Category has ioc_value
+    or Categories has ioc_value
 | extend CVEs = extract_all(@"(CVE-\d{4}-\d{4,})", tostring(AttackTechniques))
 | mv-expand CVE = CVEs
 | where isnotempty(CVE)

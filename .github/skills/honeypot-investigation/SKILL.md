@@ -292,38 +292,41 @@ SecurityIncident
 
 ### Phase 4: Vulnerability Assessment
 
-**CRITICAL:** Microsoft Defender for Endpoint uses a different machine ID format (GUID) than Sentinel's DeviceId (SHA1 hash). You MUST use Advanced Hunting to get the correct MDE machine ID.
+**⚠️ CRITICAL: TVM tables are snapshot tables — NO time filtering!**
+- `DeviceTvmSoftwareVulnerabilities` has NO `Timestamp` or `TimeGenerated` column
+- Do NOT add `where Timestamp between (...)` — it will fail with a schema error
+- Do NOT use Sentinel Data Lake (`query_lake`) — TVM tables are only available via Advanced Hunting
+- Use `RunAdvancedHuntingQuery` MCP tool only
 
-**Sequential execution (cannot parallelize - dependencies):**
-
-#### Step 4A: Activate Advanced Hunting Tools
+#### Step 4A: Query Vulnerabilities via Advanced Hunting KQL
+```kql
+let deviceName = '<HONEYPOT_NAME>';
+DeviceTvmSoftwareVulnerabilities
+| where DeviceName startswith deviceName
+| project
+    CveId,
+    VulnerabilitySeverityLevel,
+    SoftwareVendor,
+    SoftwareName,
+    SoftwareVersion,
+    RecommendedSecurityUpdate,
+    RecommendedSecurityUpdateId
+| summarize by CveId, VulnerabilitySeverityLevel, SoftwareVendor, SoftwareName, SoftwareVersion, RecommendedSecurityUpdate, RecommendedSecurityUpdateId
+| order by case(VulnerabilitySeverityLevel == "Critical", 1, VulnerabilitySeverityLevel == "High", 2, VulnerabilitySeverityLevel == "Medium", 3, 4) asc
+| take 30
 ```
-activate_advanced_hunting_tools()
-```
 
-#### Step 4B: Get MDE Machine ID via Advanced Hunting
-```
-mcp_sentinel-tria_RunAdvancedHuntingQuery({
-  "kqlQuery": "DeviceInfo | where DeviceName =~ '<HONEYPOT_NAME>' | summarize arg_max(Timestamp, *) | project DeviceId, DeviceName, OSPlatform, OSVersion, PublicIP"
-})
-```
+**Key columns returned:**
+- `CveId` — CVE identifier (e.g., CVE-2025-15467)
+- `VulnerabilitySeverityLevel` — String: Critical / High / Medium / Low
+- `SoftwareVendor`, `SoftwareName`, `SoftwareVersion` — Affected software details
+- `RecommendedSecurityUpdate` — Patch info (may be empty)
 
-**Extract `DeviceId` (GUID format) from result - this is the MDE machine ID.**
-
-#### Step 4C: Query Vulnerabilities
-```
-mcp_sentinel-tria_GetDefenderMachineVulnerabilities({"id": "<MDE_MACHINE_ID>"})
-```
-
-**Use the GUID-format DeviceId from Step 4B result.**
-
-**Parse Response:**
-- CVE ID
-- Severity (Critical/High/Medium/Low)
-- CVSS Score
-- Affected Product/Component
-- Exploit Availability
-- Description
+**🔴 PROHIBITED:**
+- ❌ Adding `Timestamp` or `TimeGenerated` filters (column does not exist)
+- ❌ Projecting `CvssScore` (column does not exist — use `VulnerabilitySeverityLevel` instead)
+- ❌ Using Sentinel Data Lake MCP (`query_lake`) for TVM tables
+- ❌ Using `GetDefenderMachineVulnerabilities` API (requires separate machine ID lookup, less reliable)
 
 **After Phase 4 completes:**
 - Report elapsed time: `[MM:SS] ✓ Vulnerability scan completed (XX seconds)`
