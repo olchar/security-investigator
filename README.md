@@ -274,7 +274,7 @@ Each file uses a standardized metadata header for efficient `grep_search` discov
 | **Python 3.8+** | For IP enrichment utility and report generation. [Download](https://www.python.org/downloads/) |
 | **Node.js 18+** | Required for KQL Search MCP (`npx`) and building local MCP Apps. [Download](https://nodejs.org/) or install via `winget install OpenJS.NodeJS.LTS` (Windows) / `brew install node` (macOS). |
 | **Microsoft Sentinel** | Log Analytics workspace with data. You'll need the workspace GUID and tenant ID. |
-| **Azure AD Permissions** | See [MCP Server Setup](#-mcp-server-setup) for per-server permission requirements. |
+| **Azure AD Permissions** | If you can query Sentinel in the Azure Portal, you likely have sufficient access. See [MCP Server Setup](#-mcp-server-setup) for detailed per-server requirements. |
 | **GitHub PAT** | `public_repo` scope — [Create one here](https://github.com/settings/tokens/new). Used by KQL Search MCP. |
 
 ### 1. Install Dependencies
@@ -337,10 +337,18 @@ See [MCP Server Setup](#-mcp-server-setup) below for per-server permissions and 
 
 > ⚠️ **VS Code Insiders Required:** MCP Apps currently require [VS Code Insiders](https://code.visualstudio.com/insiders/). Requires **Node.js 18+**.
 
+**PowerShell (Windows):**
 ```powershell
 cd mcp-apps/sentinel-geomap-server; npm install; npm run build; cd ../..
 cd mcp-apps/sentinel-heatmap-server; npm install; npm run build; cd ../..
 cd mcp-apps/sentinel-incident-comment; npm install; npm run build; cd ../..
+```
+
+**Bash (macOS/Linux):**
+```bash
+cd mcp-apps/sentinel-geomap-server && npm install && npm run build && cd ../..
+cd mcp-apps/sentinel-heatmap-server && npm install && npm run build && cd ../..
+cd mcp-apps/sentinel-incident-comment && npm install && npm run build && cd ../..
 ```
 
 The `sentinel-incident-comment` MCP App requires an Azure Logic App backend. See [mcp-apps/sentinel-incident-comment/README.md](mcp-apps/sentinel-incident-comment/README.md) for setup. Based on [stefanpems/mcp-add-comment-to-sentinel-incident](https://github.com/stefanpems/mcp-add-comment-to-sentinel-incident).
