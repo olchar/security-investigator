@@ -1,6 +1,13 @@
 {
   "sentinel_workspace_id": "YOUR_WORKSPACE_ID_HERE",
   "tenant_id": "YOUR_TENANT_ID_HERE",
+  "subscription_id": "YOUR_SUBSCRIPTION_ID_HERE",
+  "azure_mcp": {
+    "resource_group": "YOUR_LOG_ANALYTICS_RESOURCE_GROUP",
+    "workspace_name": "YOUR_LOG_ANALYTICS_WORKSPACE_NAME",
+    "tenant": "YOUR_TENANT_ID_HERE",
+    "subscription": "YOUR_SUBSCRIPTION_ID_HERE"
+  },
   "ipinfo_token": null,
   "abuseipdb_token": null,
   "vpnapi_token": null,

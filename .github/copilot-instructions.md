@@ -7,17 +7,44 @@ This workspace contains a security investigation automation system. GitHub Copil
 ## 📑 TABLE OF CONTENTS
 
 1. **[Critical Workflow Rules](#-critical-workflow-rules---read-first-)** - Start here!
-2. **[KQL Pre-Flight Checklist](#-kql-query-execution---pre-flight-checklist)** - Mandatory before EVERY query
-3. **[Evidence-Based Analysis](#-evidence-based-analysis---global-rule)** - Anti-hallucination guardrails
-4. **[Available Skills](#available-skills)** - Specialized investigation workflows
-5. **[Ad-Hoc Queries](#appendix-ad-hoc-query-examples)** - Quick reference patterns
-6. **[Troubleshooting](#troubleshooting-guide)** - Common issues and solutions
+2. **[Environment Configuration](#-environment-configuration)** - Read `config.json` for workspace/tenant details
+3. **[KQL Pre-Flight Checklist](#-kql-query-execution---pre-flight-checklist)** - Mandatory before EVERY query
+4. **[Evidence-Based Analysis](#-evidence-based-analysis---global-rule)** - Anti-hallucination guardrails
+5. **[Available Skills](#available-skills)** - Specialized investigation workflows
+6. **[Ad-Hoc Queries](#appendix-ad-hoc-query-examples)** - Quick reference patterns
+7. **[Troubleshooting](#troubleshooting-guide)** - Common issues and solutions
 
 ---
 
 ## ⚠️ CRITICAL WORKFLOW RULES - READ FIRST ⚠️
 
 **🤖 SKILL DETECTION:** Before starting any investigation, check the [Available Skills](#available-skills) section below and load the appropriate SKILL.md file.
+
+---
+
+## 🔧 ENVIRONMENT CONFIGURATION
+
+**Environment-specific values (workspace IDs, tenant IDs, resource group names, API tokens) are stored in `config.json` at the workspace root.** This file is gitignored and never committed.
+
+When you need environment values (especially for Azure MCP Server calls), **read `config.json`** instead of asking the user or hardcoding values.
+
+**Schema** (see `config.json.template` for field names):
+
+| Field | Used By | Purpose |
+|-------|---------|--------|
+| `sentinel_workspace_id` | Sentinel Data Lake MCP (`query_lake`) | Log Analytics workspace GUID |
+| `tenant_id` | All Azure/Sentinel tools | Entra ID tenant |
+| `subscription_id` | Azure MCP Server, Azure CLI | Azure subscription |
+| `azure_mcp.resource_group` | Azure MCP `workspace_log_query` | RG containing Log Analytics workspace |
+| `azure_mcp.workspace_name` | Azure MCP `workspace_log_query` | Log Analytics workspace display name |
+| `azure_mcp.tenant` | Azure MCP Server (all calls) | Required to avoid cross-tenant auth errors |
+| `azure_mcp.subscription` | Azure MCP Server (all calls) | Target subscription |
+| `ipinfo_token` | `enrich_ips.py` | ipinfo.io API key |
+| `abuseipdb_token` | `enrich_ips.py` | AbuseIPDB API key |
+| `vpnapi_token` | `enrich_ips.py` | vpnapi.io API key |
+| `shodan_token` | `enrich_ips.py` | Shodan API key |
+
+**When making Azure MCP Server calls**, always pass `tenant` and `subscription` from `config.json` to avoid the multi-tenant auth issue (DefaultAzureCredential may pick up the wrong tenant).
 
 ---
 
@@ -297,6 +324,7 @@ When explaining technical concepts, use **Microsoft Learn MCP** to ground respon
 | **scope-drift-detection** | Scope drift analysis for service principals AND user accounts: 90-day behavioral baseline vs. 7-day recent activity, weighted Drift Score (5 dimensions for SPNs; 7 dimensions for user interactive including apps/devices; 6 for non-interactive), correlated with AuditLogs, DeviceNetworkEvents, SecurityAlert, SigninLogs_Anomalies_KQL_CL, and Identity Protection. Supports inline chat and markdown file output | "scope drift", "service principal drift", "SPN behavioral change", "baseline deviation", "access expansion", "automation account drift", "user drift", "user behavioral change" |
 | **heatmap-visualization** | Interactive heatmap visualization for Sentinel data: attack patterns by time, activity grids, IP vs hour matrices, threat intel drill-down panels | "heatmap", "show heatmap", "visualize patterns", "activity grid" |
 | **geomap-visualization** | Interactive world map visualization for Sentinel data: attack origin maps, geographic threat distribution, IP geolocation with enrichment drill-down | "geomap", "world map", "attack map", "show on map", "attack origins" |
+| **mcp-usage-monitoring** | MCP server usage monitoring and audit: Graph MCP endpoint analysis, Sentinel MCP auth events, Azure MCP ARM operations, workspace query governance, MCP proportion analysis, sensitive API detection, off-hours activity, user attribution, MCP Usage Score with 5 health/risk dimensions. Supports inline chat and markdown file output | "MCP usage", "MCP server monitoring", "MCP activity", "MCP audit", "Graph MCP", "Sentinel MCP", "Azure MCP", "AI agent monitoring", "tool usage monitoring", "MCP breakdown", "who is using MCP" |
 
 ### Skill Detection Workflow
 
@@ -475,6 +503,60 @@ SecurityEvent
 - 🖱️ Click-to-expand threat intel panels (when enrichment data provided)
 - 📈 Auto-calculated statistics (total, max, min, unique rows/columns)
 
+### Azure MCP Server
+Direct Azure Resource Manager and Azure Monitor integration for quick ad-hoc queries:
+- **`mcp_azure-mcp-ser_monitor` → `monitor_workspace_log_query`**: Execute KQL queries directly against Log Analytics workspace via Azure Monitor API. Same data as Sentinel Data Lake, but through the ARM path — useful for fast ad-hoc queries within the 90-day retention window.
+- **`mcp_azure-mcp-ser_monitor` → `monitor_activitylog_list`**: Get Azure Activity Logs for specific resources (deployments, modifications, access patterns)
+- **`mcp_azure-mcp-ser_group_list`**: List resource groups in a subscription
+- **`mcp_azure-mcp-ser_subscription_list`**: List subscriptions
+
+**Required parameters** — read from `config.json` (`azure_mcp` section):
+
+| Parameter | Source | Why |
+|-----------|--------|-----|
+| `tenant` | `config.json → azure_mcp.tenant` | Prevents cross-tenant auth errors |
+| `subscription` | `config.json → azure_mcp.subscription` | Targets correct subscription |
+| `resource-group` | `config.json → azure_mcp.resource_group` | Required for `workspace_log_query` |
+| `workspace` | `config.json → azure_mcp.workspace_name` | LA workspace display name |
+
+**Calling `workspace_log_query`:**
+```json
+{
+  "command": "monitor_workspace_log_query",
+  "parameters": {
+    "resource-group": "<from config.json>",
+    "workspace": "<from config.json>",
+    "tenant": "<from config.json>",
+    "subscription": "<from config.json>",
+    "table": "AzureActivity",
+    "query": "AzureActivity | where TimeGenerated >= ago(1h) | take 10",
+    "hours": 1,
+    "limit": 20
+  }
+}
+```
+
+**When to use Azure MCP Server `workspace_log_query` vs Sentinel Data Lake `query_lake`:**
+
+| Factor | Azure MCP `workspace_log_query` | Sentinel Data Lake `query_lake` |
+|--------|---|---|
+| **Speed** | Faster for ad-hoc (direct ARM call) | 5-15 min ingestion lag for very recent data |
+| **Auth** | DefaultAzureCredential (VS Code cached) | Sentinel Platform Services OAuth |
+| **Params** | Needs `resource-group` + `workspace` name + `table` | Needs `workspaceId` (GUID) |
+| **Retention** | 90 days | 90 days (same workspace) |
+| **Telemetry** | AppId `1950a258` via `AzurePowerShellCredential` — detectable via UserAgent `azsdk-net-Identity (.NET 9.x)` in SigninLogs, `csharpsdk,LogAnalyticsPSClient` in LAQueryLogs | Under Sentinel MCP AppId (distinguishable) |
+| **Best for** | Quick lookups, AzureActivity, ad-hoc exploration | Skill-based investigation workflows |
+
+**🔍 Azure MCP Server Detection (Field-Tested Feb 2026):** Azure MCP Server IS identifiable through composite signal analysis. It uses `DefaultAzureCredential` → `AzurePowerShellCredential` chain, producing AppId `1950a258-227b-4e31-a9cf-717495945fc2`. Distinguish from Azure PowerShell AND other Azure SDK services via:
+- **SigninLogs:** AppId `1950a258` + UserAgent `azsdk-net-Identity/1.x.x (.NET 9.x.x; Microsoft Windows ...)` — the `Microsoft Windows` OS filter is CRITICAL because `azsdk-net-Identity` is shared by cloud services (e.g., Security Copilot API `bb3d68c2` on `CBL-Mariner/Linux`)
+- **LAQueryLogs:** RequestClientApp `csharpsdk,LogAnalyticsPSClient` (PowerShell uses `PSClient,LogAnalyticsPSClient`)
+- **AzureActivity:** Claims.appid `1950a258` (write operations only — reads not logged, ~2-4h ingestion lag)
+- **Token caching:** Sign-in events represent token acquisitions (~1hr lifetime), NOT individual API calls. Count sign-in clusters as "access sessions".
+
+See `.github/skills/mcp-usage-monitoring/SKILL.md` Queries 25-27 for detection queries.
+
+- **Documentation**: https://learn.microsoft.com/en-us/azure/developer/azure-mcp-server/overview
+
 ### Custom Sentinel Tables
 
 #### SigninLogs_Anomalies_KQL_CL
@@ -609,7 +691,7 @@ All query files in `queries/` MUST use this standardized metadata header for eff
 
 **When creating new query files:** Follow this format. When updating existing files that lack these fields, add them.
 
-**PII-Free Standard:** Query files in `queries/` must NEVER contain tenant-specific PII such as real workspace names, UPNs, server hostnames, GUIDs, or application names from live environments. Use generic placeholders (e.g., `<YourAppName>`, `user@contoso.com`, `<WorkspaceName>`) instead. Before committing or saving a query file, verify it contains no environment-specific identifiers.
+**PII-Free Standard:** All committed documents — query files (`queries/`), skill files (`.github/skills/`), and any other versioned documentation — must NEVER contain tenant-specific PII such as real workspace names, UPNs, server hostnames, subscription/tenant GUIDs, or application names from live environments. Use generic placeholders (e.g., `<YourAppName>`, `user@contoso.com`, `<WorkspaceName>`, `la-yourworkspace`). **Before creating or updating any skill or query file, perform a PII sanity check:** scan the content for real identifiers that may have been copied from live investigation output or config files, and replace them with placeholders.
 
 ---
 

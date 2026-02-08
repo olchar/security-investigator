@@ -1,6 +1,6 @@
 # 🔒 Security Investigation Automation System
 
-**Comprehensive, automated security investigations powered by Microsoft Sentinel, Defender XDR, Graph API, and threat intelligence — with 11 specialized Agent Skills**
+**Comprehensive, automated security investigations powered by Microsoft Sentinel, Defender XDR, Graph API, and threat intelligence — with 12 specialized Agent Skills**
 
 An investigation automation framework that combines **GitHub Copilot**, **VS Code Agent Skills**, and **Model Context Protocol (MCP) servers** to enable natural language security investigations. Ask questions like *"Investigate this user for the last 7 days"* or *"Is this IP malicious?"* and get comprehensive analysis with KQL queries, threat intelligence correlation, and professional reports.
 
@@ -23,7 +23,7 @@ copy config.json.template config.json
 
 # 4. Configure MCP servers
 copy .vscode\mcp.json.template .vscode\mcp.json
-# All 5 required servers are pre-configured — just needs a GitHub PAT on first use
+# All platform servers are pre-configured — just needs a GitHub PAT on first use
 
 # 5. Open Copilot Chat (Ctrl+Shift+I) in Agent mode and ask:
 #    "What skills do you have access to?"
@@ -32,7 +32,7 @@ copy .vscode\mcp.json.template .vscode\mcp.json
 
 **For detailed workflows and KQL queries:**
 → [.github/copilot-instructions.md](.github/copilot-instructions.md) (universal patterns, skill detection)
-→ [.github/skills/](.github/skills/) (11 specialized investigation workflows)
+→ [.github/skills/](.github/skills/) (12 specialized investigation workflows)
 → [queries/](queries/) (verified KQL query library)
 
 ---
@@ -47,19 +47,23 @@ copy .vscode\mcp.json.template .vscode\mcp.json
 │            (Skill detection, universal patterns, routing)          │
 ├────────────────────────────────────────────────────────────────────┤
 │                     .github/skills/*.md                            │
-│      (11 specialized workflows with KQL, risk assessment)          │
+│      (12 specialized workflows with KQL, risk assessment)          │
 ├────────────────────────────────────────────────────────────────────┤
-│                        MCP Servers                                 │
+│                     MCP Servers (Platform)                         │
 │  ┌─────────────┐  ┌──────────────┐  ┌───────────────────────────┐  │
 │  │ Sentinel    │  │ Graph API    │  │ Sentinel Triage (XDR)     │  │
 │  │ Data Lake   │  │ (Identity)   │  │ (Advanced Hunting)        │  │
 │  └─────────────┘  └──────────────┘  └───────────────────────────┘  │
-│  ┌─────────────┐  ┌──────────────┐                                 │
-│  │ KQL Search  │  │ Microsoft    │                                 │
-│  │ (Schema)    │  │ Learn (Docs) │                                 │
-│  └─────────────┘  └──────────────┘                                 │
+│  ┌─────────────┐  ┌──────────────┐  ┌───────────────────────────┐  │
+│  │ KQL Search  │  │ Microsoft    │  │ Azure MCP Server          │  │
+│  │ (Schema)    │  │ Learn (Docs) │  │ (ARM + Monitor)           │  │
+│  └─────────────┘  └──────────────┘  └───────────────────────────┘  │
+│  ┌─────────────┐                                                   │
+│  │ Sentinel    │  ⚠️ Private Preview                                │
+│  │ Graph (Rel) │                                                   │
+│  └─────────────┘                                                   │
 ├────────────────────────────────────────────────────────────────────┤
-│               MCP Apps (Local Visualization Servers)               │
+│               MCP Apps (Local Custom Servers)                      │
 │  ┌─────────────┐  ┌──────────────┐  ┌───────────────────────────┐  │
 │  │ Geomap      │  │ Heatmap      │  │ Incident Comment          │  │
 │  │ (Attack Map)│  │ (Patterns)   │  │ (Sentinel Integration)    │  │
@@ -71,8 +75,8 @@ copy .vscode\mcp.json.template .vscode\mcp.json
 ```
 
 **Key Components:**
-- **11 Agent Skills** — Modular investigation workflows for incidents, users, devices, IoCs, authentication, scope drift, and more
-- **5 MCP Server Integrations** — Sentinel Data Lake, Graph API, Defender XDR Triage, KQL Search, Microsoft Learn
+- **12 Agent Skills** — Modular investigation workflows for incidents, users, devices, IoCs, authentication, scope drift, MCP monitoring, and more
+- **7 MCP Server Integrations** — Sentinel Data Lake, Graph API, Defender XDR Triage, KQL Search, Microsoft Learn, Azure MCP Server, Sentinel Graph (private preview)
 - **3 Local MCP Apps** — Interactive heatmaps, geographic attack maps, incident commenting
 - **Python Utilities** — HTML report generation with IP enrichment (geolocation, VPN detection, abuse scores, Shodan port/service/CVE intelligence)
 
@@ -89,6 +93,7 @@ copy .vscode\mcp.json.template .vscode\mcp.json
 - **Authentication Forensics** — SessionId tracing, token reuse vs MFA, geographic anomalies
 - **CA Policy Investigation** — Conditional Access failures, policy bypass detection
 - **Scope Drift Detection** — 90-day behavioral baseline vs 7-day comparison for service principals and user accounts
+- **MCP Usage Monitoring** — Graph MCP, Sentinel MCP, Azure MCP server audit with behavioral baselines, anomaly detection, and composite scoring
 - **Visualizations** — Interactive heatmaps and geographic attack maps
 
 ---
@@ -112,6 +117,7 @@ This system uses **[VS Code Agent Skills](https://code.visualstudio.com/docs/cop
 | **[scope-drift-detection](/.github/skills/scope-drift-detection/SKILL.md)** | Scope drift analysis for service principals AND user accounts: 90-day behavioral baseline vs 7-day recent activity, weighted Drift Score, correlated with AuditLogs, SecurityAlert, Identity Protection | "scope drift", "service principal drift", "SPN behavioral change", "user drift", "baseline deviation" |
 | **[heatmap-visualization](/.github/skills/heatmap-visualization/SKILL.md)** | Interactive heatmap visualization for Sentinel data: attack patterns by time, activity grids, IP vs hour matrices, threat intel drill-down | "heatmap", "show heatmap", "visualize patterns", "activity grid" |
 | **[geomap-visualization](/.github/skills/geomap-visualization/SKILL.md)** | Interactive world map visualization for Sentinel data: attack origin maps, geographic threat distribution, IP geolocation with enrichment drill-down | "geomap", "world map", "geographic", "attack map", "attack origins" |
+| **[mcp-usage-monitoring](/.github/skills/mcp-usage-monitoring/SKILL.md)** | MCP server usage monitoring and audit: Graph MCP endpoint analysis, Sentinel MCP auth events, Azure MCP ARM operations, workspace query governance, MCP Usage Score with 5 health/risk dimensions | "MCP usage", "MCP server monitoring", "MCP activity", "MCP audit", "Graph MCP", "Sentinel MCP", "Azure MCP" |
 
 ### How Skills Work
 
@@ -135,6 +141,7 @@ You don't need to mention the skill name — keywords are detected automatically
 | "Write a KQL query to find failed sign-ins" | kql-query-authoring |
 | "Trace this authentication back to the original MFA" | authentication-tracing |
 | "Detect scope drift in service principals" | scope-drift-detection |
+| "Show me MCP server usage for the last 30 days" | mcp-usage-monitoring |
 
 ### Follow-ups and Chaining
 
@@ -211,7 +218,7 @@ security-investigator/
 ├── requirements.txt             # Python dependencies
 ├── .github/
 │   ├── copilot-instructions.md  # Skill detection, universal patterns, routing
-│   └── skills/                  # 11 Agent Skills (modular investigation workflows)
+│   └── skills/                  # 12 Agent Skills (modular investigation workflows)
 │       ├── authentication-tracing/
 │       ├── ca-policy-investigation/
 │       ├── computer-investigation/
@@ -221,11 +228,13 @@ security-investigator/
 │       ├── incident-investigation/
 │       ├── ioc-investigation/
 │       ├── kql-query-authoring/
+│       ├── mcp-usage-monitoring/
 │       ├── scope-drift-detection/
 │       └── user-investigation/
 ├── queries/                     # Verified KQL query library (grep-searchable, by data domain)
 │   ├── identity/               # Entra ID / Azure AD identity queries
 │   │   ├── app_credential_management.md
+│   │   ├── mcp_anomaly_detection_kql_jobs.md
 │   │   └── service_principal_scope_drift.md
 │   ├── endpoint/               # Defender for Endpoint device queries
 │   │   ├── endpoint_failed_connections.md
@@ -244,7 +253,12 @@ security-investigator/
 │   ├── sentinel-heatmap-server/
 │   └── sentinel-incident-comment/
 ├── docs/                        # Setup guides and reference documentation
-├── reports/                     # Generated HTML investigation reports
+├── reports/                     # Generated investigation reports (organized by type)
+│   ├── user-investigations/    # HTML user investigation reports
+│   ├── honeypot/               # Honeypot executive reports
+│   ├── scope-drift/            # Scope drift analysis reports
+│   ├── mcp-usage/              # MCP usage monitoring reports
+│   └── exposure/               # Exposure management reports
 ├── temp/                        # Investigation JSON files (auto-cleaned after 3 days)
 └── archive/                     # Legacy code and design docs
 ```
@@ -303,6 +317,13 @@ Copy `config.json.template` to `config.json` and fill in your values:
 {
   "sentinel_workspace_id": "YOUR_WORKSPACE_ID_HERE",
   "tenant_id": "YOUR_TENANT_ID_HERE",
+  "subscription_id": "YOUR_SUBSCRIPTION_ID_HERE",
+  "azure_mcp": {
+    "resource_group": "YOUR_LOG_ANALYTICS_RESOURCE_GROUP",
+    "workspace_name": "YOUR_LOG_ANALYTICS_WORKSPACE_NAME",
+    "tenant": "YOUR_TENANT_ID_HERE",
+    "subscription": "YOUR_SUBSCRIPTION_ID_HERE"
+  },
   "ipinfo_token": null,
   "abuseipdb_token": null,
   "vpnapi_token": null,
@@ -315,6 +336,8 @@ Copy `config.json.template` to `config.json` and fill in your values:
 |---------|----------|-------------|
 | `sentinel_workspace_id` | Yes | Microsoft Sentinel (Log Analytics) workspace GUID |
 | `tenant_id` | Yes | Entra ID (Azure AD) tenant ID for your Sentinel workspace |
+| `subscription_id` | Yes | Azure subscription ID containing the Sentinel workspace |
+| `azure_mcp.*` | Yes | Azure MCP Server parameters — resource group, workspace name, tenant, subscription. Required to avoid cross-tenant auth errors. |
 | `ipinfo_token` | Recommended | [ipinfo.io](https://ipinfo.io/) API token — geolocation, ASN, org. Free: 1K/day; token: 50K/month; paid plans include VPN detection |
 | `abuseipdb_token` | Recommended | [AbuseIPDB](https://www.abuseipdb.com/) API token — IP reputation scoring (0-100 confidence). Free: 1K/day |
 | `vpnapi_token` | Optional | [vpnapi.io](https://vpnapi.io/) API token — VPN/proxy/Tor detection. Not needed if ipinfo.io is on a paid plan |
@@ -323,14 +346,14 @@ Copy `config.json.template` to `config.json` and fill in your values:
 
 ### 3. Configure MCP Servers
 
-Copy the MCP server template (all 5 required servers + 3 optional MCP Apps are pre-configured):
+Copy the MCP server template (all platform servers + 3 optional MCP Apps are pre-configured):
 
 ```powershell
 copy .vscode/mcp.json.template .vscode/mcp.json
 ```
 
 The template includes inline documentation for each server. On first use, VS Code will prompt for:
-- **Entra ID login** — browser-based auth for Sentinel Data Lake, Graph, and Triage servers
+- **Entra ID login** — browser-based auth for Sentinel Data Lake, Graph, Triage, and Sentinel Graph servers
 - **[GitHub PAT](https://github.com/settings/tokens/new)** — for KQL Search MCP (schema intelligence and query discovery). Needs `public_repo` scope.
 
 See [MCP Server Setup](#-mcp-server-setup) below for per-server permissions and installation guides.
@@ -359,17 +382,19 @@ The `sentinel-incident-comment` MCP App requires an Azure Logic App backend. See
 
 ## 🔌 MCP Server Setup
 
-The system **requires** five Model Context Protocol (MCP) servers. All five are **pre-configured** in [.vscode/mcp.json.template](.vscode/mcp.json.template) — copy it to `.vscode/mcp.json` to get started (see [Step 3 above](#3-configure-mcp-servers)). The sections below document permissions, tools, and installation guides for each server.
+The system uses several Model Context Protocol (MCP) servers. All are **pre-configured** in [.vscode/mcp.json.template](.vscode/mcp.json.template) — copy it to `.vscode/mcp.json` to get started (see [Step 3 above](#3-configure-mcp-servers)). The sections below document permissions, tools, and installation guides for each server.
 
 ### At a Glance
 
-| # | Server | MCP URL | Setup Guide | Key Permissions |
-|---|--------|---------|-------------|-----------------|
+| # | Server | MCP URL / Transport | Setup Guide | Key Permissions |
+|---|--------|---------------------|-------------|-----------------|
 | 1 | **Sentinel Data Lake** | `https://sentinel.microsoft.com/mcp/data-exploration` | [Setup](https://learn.microsoft.com/en-us/copilot/security/developer/mcp-get-started) | Log Analytics Reader |
 | 2 | **Microsoft Graph** | `https://mcp.svc.cloud.microsoft/enterprise` | [Setup](https://learn.microsoft.com/en-us/graph/mcp-server/get-started?tabs=http%2Cvscode) | User.Read.All, Device.Read.All |
 | 3 | **Sentinel Triage** | `https://sentinel.microsoft.com/mcp/triage` | [Setup](https://learn.microsoft.com/en-us/azure/sentinel/datalake/sentinel-mcp-triage-tool) | SecurityReader |
 | 4 | **KQL Search** | `npx -y kql-search-mcp` (stdio) | [Setup](https://www.npmjs.com/package/kql-search-mcp) | [GitHub PAT](https://github.com/settings/tokens/new) (`public_repo`) |
 | 5 | **Microsoft Learn** | `https://learn.microsoft.com/api/mcp` | [Setup](https://github.com/MicrosoftDocs/mcp) | None (free) |
+| 6 | **Azure MCP Server** | VS Code extension (stdio) | [Setup](https://learn.microsoft.com/en-us/azure/developer/azure-mcp-server/overview) | Contributor or Reader on subscription |
+| 7 | **Sentinel Graph** ⚠️ | `https://sentinel.microsoft.com/mcp/graph` | [Blog](https://techcommunity.microsoft.com/blog/microsoft-security-blog/uncover-hidden-security-risks-with-microsoft-sentinel-graph/4469437) | Sentinel Reader — *Private Preview* |
 
 ### 1. Microsoft Sentinel MCP Server
 
@@ -440,6 +465,32 @@ Grant-EntraBetaMCPServerPermission -ApplicationName VisualStudioCode
 **Tools:** `microsoft_docs_search`, `microsoft_docs_fetch`, `microsoft_code_sample_search`
 
 No API key required — free, cloud-hosted by Microsoft.
+
+### 6. Azure MCP Server
+
+**📖 [Installation Guide](https://learn.microsoft.com/en-us/azure/developer/azure-mcp-server/overview)**
+
+Install via VS Code extension: search "Azure MCP Server" in Extensions, or install from the [Marketplace](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.azure-mcp). The extension registers as a stdio MCP server automatically.
+
+**Tools:** `monitor_workspace_log_query`, `monitor_activitylog_list`, `group_list`, `subscription_list`, and 40+ namespaces covering AI, identity, security, databases, storage, compute, and networking.
+
+**Permissions:**
+- **Reader** (minimum) — read-only access to Azure resources
+- **Log Analytics Reader** — for `workspace_log_query` (KQL against Log Analytics)
+- **Contributor** — for write/modify operations (optional)
+
+**Configuration:** Requires `azure_mcp` parameters in `config.json` (tenant, subscription, resource group, workspace name) to avoid cross-tenant auth errors. See [Configure Environment](#2-configure-environment).
+
+### 7. Sentinel Graph MCP Server ⚠️ Private Preview
+
+> **Note:** Sentinel Graph is currently in **private preview** and not available to all customers. If your tenant does not have access, this server will fail to connect — you can safely remove it from `.vscode/mcp.json`. See the [announcement blog post](https://techcommunity.microsoft.com/blog/microsoft-security-blog/uncover-hidden-security-risks-with-microsoft-sentinel-graph/4469437) for details and enrollment.
+
+**Tools:** Entity graph exploration and relationship queries.
+
+**Permissions:**
+- **Sentinel Reader** (minimum)
+
+Pre-configured in `.vscode/mcp.json.template`. Browser-based Entra ID login on first use.
 
 ### Verify Setup
 

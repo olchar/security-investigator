@@ -52,7 +52,7 @@ This agent performs comprehensive security analysis on honeypot servers to asses
 
 - **Start Date**: Current date - time range
 - **End Date**: Current date + 2 days (per date range rules)
-- **Output File**: `reports/Honeypot_Executive_Report_<hostname>_<timestamp>.md`
+- **Output File**: `reports/honeypot/Honeypot_Executive_Report_<hostname>_<timestamp>.md`
 - **Temp Files**: `temp/honeypot_ips_<timestamp>.json`, `temp/honeypot_data_<timestamp>.json`
 
 ---
@@ -350,7 +350,7 @@ DeviceTvmSoftwareVulnerabilities
 
 **Report Generation:**
 1. Populate template with data from Phases 1-4
-2. Use `create_file` to save: `reports/Honeypot_Executive_Report_<hostname>_<timestamp>.md`
+2. Use `create_file` to save: `reports/honeypot/Honeypot_Executive_Report_<hostname>_<timestamp>.md`
 3. Return absolute path to user
 
 **After Phase 5 completes:**
@@ -516,7 +516,7 @@ Before delivering report, verify:
 - ✅ IP enrichment data merged with attack logs
 - ✅ Incident filtering correctly applied (only honeypot-related incidents)
 - ✅ Vulnerability data retrieved (or documented as unavailable)
-- ✅ Report saved to correct path: `reports/Honeypot_Executive_Report_<hostname>_<timestamp>.md`
+- ✅ Report saved to correct path: `reports/honeypot/Honeypot_Executive_Report_<hostname>_<timestamp>.md`
 - ✅ Absolute path returned to user
 
 ---

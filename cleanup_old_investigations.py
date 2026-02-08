@@ -69,10 +69,11 @@ def cleanup_old_investigations(temp_dir: str = "temp", reports_dir: str = "repor
             except Exception as e:
                 print(f"  ⚠️ Error processing {filename}: {e}")
     
-    # Process HTML report files in reports/
-    if os.path.exists(reports_dir):
-        print(f"\n📂 Checking {reports_dir}/ for HTML reports...")
-        for filename in os.listdir(reports_dir):
+    # Process HTML report files in reports/user-investigations/
+    user_inv_dir = os.path.join(reports_dir, "user-investigations")
+    if os.path.exists(user_inv_dir):
+        print(f"\n📂 Checking {user_inv_dir}/ for HTML reports...")
+        for filename in os.listdir(user_inv_dir):
             # Only process investigation report HTML files
             if not filename.startswith("Investigation_Report_") or not filename.endswith(".html"):
                 continue
@@ -81,7 +82,7 @@ def cleanup_old_investigations(temp_dir: str = "temp", reports_dir: str = "repor
             if "SCRUBBED" in filename:
                 continue
             
-            filepath = os.path.join(reports_dir, filename)
+            filepath = os.path.join(user_inv_dir, filename)
             
             # Get file modification time
             try:

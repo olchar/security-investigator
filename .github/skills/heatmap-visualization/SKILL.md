@@ -403,6 +403,24 @@ mcp_sentinel-heat_show-signin-heatmap({
 
 ---
 
+## Known Pitfalls
+
+### Column Sorting Is Lexicographic
+**Problem:** The heatmap MCP app sorts columns alphabetically. Labels like `Nov 10`, `Dec 01`, `Jan 05`, `Feb 02` will render as `Dec → Feb → Jan → Nov` — completely out of chronological order.  
+**Solution:** Always use ISO date format (`YYYY-MM-DD`) for time-based column labels. `2025-11-10`, `2025-12-01`, `2026-01-05` sorts correctly both alphabetically and chronologically.
+
+```kql
+// ✅ CORRECT — sortable column labels
+| summarize value = count() by row = ..., column = format_datetime(bin(TimeGenerated, 7d), "yyyy-MM-dd")
+
+// ❌ WRONG — alphabetic sort breaks chronological order
+| summarize value = count() by row = ..., column = format_datetime(bin(TimeGenerated, 7d), "MMM dd")
+```
+
+For hourly heatmaps within a single day, `HH:mm` is fine (00:00–23:00 sorts correctly). The issue only affects multi-day/week/month labels.
+
+---
+
 ## When to Use Heatmaps
 
 ✅ **Good Use Cases:**

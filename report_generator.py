@@ -85,7 +85,7 @@ class CompactReportGenerator:
         if not output_path:
             timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
             username = result.upn.split('@')[0]
-            output_path = f"reports/Investigation_Report_Compact_{username}_{timestamp}.html"
+            output_path = f"reports/user-investigations/Investigation_Report_Compact_{username}_{timestamp}.html"
         
         # Ensure output directory exists
         os.makedirs(os.path.dirname(output_path), exist_ok=True)

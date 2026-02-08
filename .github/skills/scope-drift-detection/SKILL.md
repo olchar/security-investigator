@@ -121,12 +121,12 @@ This skill supports two output modes. **ASK the user which they prefer** if not 
 - Best for quick review and interactive follow-up questions
 
 ### Mode 2: Markdown File Report
-- Save a comprehensive report to `reports/Scope_Drift_Report_<entity>_<timestamp>.md`
+- Save a comprehensive report to `reports/scope-drift/Scope_Drift_Report_<entity>_<timestamp>.md`
 - All ASCII visualizations render correctly inside markdown code fences (` ``` `)
 - Includes all data from inline mode plus additional detail sections
 - Use `create_file` tool — NEVER use terminal commands for file output
-- **Filename pattern:** `reports/Scope_Drift_Report_<entity>_YYYYMMDD_HHMMSS.md`
-  - **User:** `Scope_Drift_Report_<username>_YYYYMMDD_HHMMSS.md` (extract username from UPN, e.g., `officechris` from `officechris@stelznet.com`)
+- **Filename pattern:** `reports/scope-drift/Scope_Drift_Report_<entity>_YYYYMMDD_HHMMSS.md`
+  - **User:** `Scope_Drift_Report_<username>_YYYYMMDD_HHMMSS.md` (extract username from UPN, e.g., `jdoe` from `jdoe@contoso.com`)
   - **SPN (single):** `Scope_Drift_Report_<spn_short_name>_YYYYMMDD_HHMMSS.md` (use display name, sanitized: lowercase, spaces/special chars replaced with hyphens)
   - **SPN (all):** `Scope_Drift_Report_all_spns_YYYYMMDD_HHMMSS.md` (tenant-wide scan of all service principals)
 
