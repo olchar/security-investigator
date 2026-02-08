@@ -102,12 +102,12 @@ This system uses **[VS Code Agent Skills](https://code.visualstudio.com/docs/cop
 | Skill | Description | Trigger Keywords |
 |-------|-------------|------------------|
 | **[incident-investigation](/.github/skills/incident-investigation/SKILL.md)** | Comprehensive incident analysis for Defender XDR and Sentinel incidents: criticality assessment, entity extraction, filtering, recursive entity investigation | "investigate incident", "incident ID", "analyze incident", "triage incident", incident number |
-| **[user-investigation](/.github/skills/user-investigation/SKILL.md)** | Azure AD user security analysis: sign-ins, anomalies, MFA, devices, audit logs, incidents, Identity Protection, HTML reports | "investigate user", "security investigation", "check user activity", UPN/email |
+| **[user-investigation](/.github/skills/user-investigation/SKILL.md)** | Entra ID user security analysis: sign-ins, anomalies, MFA, devices, audit logs, incidents, Identity Protection, HTML reports | "investigate user", "security investigation", "check user activity", UPN/email |
 | **[computer-investigation](/.github/skills/computer-investigation/SKILL.md)** | Device security analysis for Entra Joined, Hybrid Joined, and Entra Registered devices: Defender alerts, compliance, logged-on users, vulnerabilities, process/network/file events | "investigate computer", "investigate device", "investigate endpoint", "check machine", hostname |
 | **[ioc-investigation](/.github/skills/ioc-investigation/SKILL.md)** | Indicator of Compromise analysis: IP addresses, domains, URLs, file hashes. Includes Defender Threat Intelligence, Sentinel TI tables, CVE correlation, organizational exposure | "investigate IP", "investigate domain", "investigate URL", "investigate hash", "IoC", "is this malicious" |
 | **[honeypot-investigation](/.github/skills/honeypot-investigation/SKILL.md)** | Honeypot security analysis: attack patterns, threat intel, vulnerabilities, executive reports | "honeypot", "attack analysis", "threat actor" |
 | **[kql-query-authoring](/.github/skills/kql-query-authoring/SKILL.md)** | KQL query creation using schema validation, community examples, Microsoft Learn | "write KQL", "create KQL query", "help with KQL", "query [table]" |
-| **[authentication-tracing](/.github/skills/authentication-tracing/SKILL.md)** | Azure AD authentication chain forensics: SessionId analysis, token reuse vs interactive MFA, geographic anomalies | "trace authentication", "SessionId analysis", "token reuse", "geographic anomaly" |
+| **[authentication-tracing](/.github/skills/authentication-tracing/SKILL.md)** | Entra ID authentication chain forensics: SessionId analysis, token reuse vs interactive MFA, geographic anomalies | "trace authentication", "SessionId analysis", "token reuse", "geographic anomaly" |
 | **[ca-policy-investigation](/.github/skills/ca-policy-investigation/SKILL.md)** | Conditional Access policy forensics: sign-in failure correlation, policy state changes, security bypass detection | "Conditional Access", "CA policy", "device compliance", "policy bypass" |
 | **[scope-drift-detection](/.github/skills/scope-drift-detection/SKILL.md)** | Scope drift analysis for service principals AND user accounts: 90-day behavioral baseline vs 7-day recent activity, weighted Drift Score, correlated with AuditLogs, SecurityAlert, Identity Protection | "scope drift", "service principal drift", "SPN behavioral change", "user drift", "baseline deviation" |
 | **[heatmap-visualization](/.github/skills/heatmap-visualization/SKILL.md)** | Interactive heatmap visualization for Sentinel data: attack patterns by time, activity grids, IP vs hour matrices, threat intel drill-down | "heatmap", "show heatmap", "visualize patterns", "activity grid" |
@@ -274,7 +274,7 @@ Each file uses a standardized metadata header for efficient `grep_search` discov
 | **Python 3.8+** | For IP enrichment utility and report generation. [Download](https://www.python.org/downloads/) |
 | **Node.js 18+** | Required for KQL Search MCP (`npx`) and building local MCP Apps. [Download](https://nodejs.org/) or install via `winget install OpenJS.NodeJS.LTS` (Windows) / `brew install node` (macOS). |
 | **Microsoft Sentinel** | Log Analytics workspace with data. You'll need the workspace GUID and tenant ID. |
-| **Azure AD Permissions** | If you can query Sentinel in the Azure Portal, you likely have sufficient access. The **Graph MCP server** requires a [one-time tenant provisioning](https://learn.microsoft.com/en-us/graph/mcp-server/get-started?tabs=http%2Cvscode) by an admin. See [MCP Server Setup](#-mcp-server-setup) for detailed per-server requirements. |
+| **Entra ID Permissions** | If you can query Sentinel in the Azure Portal, you likely have sufficient access. The **Graph MCP server** requires a [one-time tenant provisioning](https://learn.microsoft.com/en-us/graph/mcp-server/get-started?tabs=http%2Cvscode) by an admin. See [MCP Server Setup](#-mcp-server-setup) for detailed per-server requirements. |
 | **GitHub PAT** | `public_repo` scope — [Create one here](https://github.com/settings/tokens/new). Used by KQL Search MCP. |
 
 ### 1. Install Dependencies
@@ -314,7 +314,7 @@ Copy `config.json.template` to `config.json` and fill in your values:
 | Setting | Required | Description |
 |---------|----------|-------------|
 | `sentinel_workspace_id` | Yes | Microsoft Sentinel (Log Analytics) workspace GUID |
-| `tenant_id` | Yes | Azure AD tenant ID for your Sentinel workspace |
+| `tenant_id` | Yes | Entra ID (Azure AD) tenant ID for your Sentinel workspace |
 | `ipinfo_token` | Recommended | [ipinfo.io](https://ipinfo.io/) API token — geolocation, ASN, org. Free: 1K/day; token: 50K/month; paid plans include VPN detection |
 | `abuseipdb_token` | Recommended | [AbuseIPDB](https://www.abuseipdb.com/) API token — IP reputation scoring (0-100 confidence). Free: 1K/day |
 | `vpnapi_token` | Optional | [vpnapi.io](https://vpnapi.io/) API token — VPN/proxy/Tor detection. Not needed if ipinfo.io is on a paid plan |
@@ -330,7 +330,7 @@ copy .vscode/mcp.json.template .vscode/mcp.json
 ```
 
 The template includes inline documentation for each server. On first use, VS Code will prompt for:
-- **Azure AD login** — browser-based auth for Sentinel Data Lake, Graph, and Triage servers
+- **Entra ID login** — browser-based auth for Sentinel Data Lake, Graph, and Triage servers
 - **GitHub PAT** — for KQL Search MCP (schema intelligence and query discovery)
 
 See [MCP Server Setup](#-mcp-server-setup) below for per-server permissions and installation guides.
