@@ -1,0 +1,418 @@
+# User Account Scope Drift Report
+
+**Generated:** 2026-02-09 17:17 UTC
+**Workspace:** la-contoso
+**User:** admin@contoso.com (Alex Johnson)
+**Entra Object ID:** xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+**Baseline Period:** 2025-11-04 → 2026-02-02 (90 days, days 8–97 ago)
+**Recent Period:** 2026-02-02 → 2026-02-09 (7 days)
+**Drift Threshold:** 150%
+**Data Sources:** SigninLogs, AADNonInteractiveUserSignInLogs, AuditLogs, SecurityAlert, SecurityIncident, Signinlogs_Anomalies_KQL_CL, Identity Protection, CloudAppEvents, EmailEvents
+
+---
+
+## Executive Summary
+
+Both interactive and non-interactive drift scores indicate **contracting scope** — the user's 7-day activity footprint is significantly narrower than the 90-day baseline across nearly all dimensions. Interactive Drift Score is **40.1** and Non-Interactive Drift Score is **68.4**, both well below the 100 stable baseline. This is consistent with natural IP/app diversity compression when comparing a short recent window against a long baseline. The only expansion signal is a **non-interactive failure rate increase** (0.99% → 1.93%), which is minor and not corroborated by security alerts. All 58 historical security alerts are **Closed / BenignPositive**. Three Identity Protection risk events were **dismissed**. No active threats detected.
+
+**Overall Risk: 🟢 LOW — No actionable scope drift. Stable, contracting user profile.**
+
+---
+
+## Interactive Sign-In Drift
+
+**Drift Score: 40.1** — ✅ Contracting scope (< 80)
+
+$$
+\text{DriftScore}_{Interactive} = 0.25V + 0.20A + 0.10R + 0.15IP + 0.10L + 0.10D + 0.10F
+$$
+
+```
+┌──────────────────────────────────────────────────────────┐
+│               INTERACTIVE DRIFT SCORE: 40.1              │
+│                    ✅ Contracting Scope                 │
+├──────────────────────────────────────────────────────────┤
+│                                                          │
+│  Volume   (25%)  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░  71.7%             │
+│  Apps     (20%)  ▓▓▓▓▓▓▓▓░░░░░░░░░░░░  38.9%             │
+│  Resources(10%)  ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░  62.5%             │
+│  IPs      (15%)  ▓▓░░░░░░░░░░░░░░░░░░  10.0%             │
+│  Locations(10%)  ▓▓▓▓▓░░░░░░░░░░░░░░░  25.0%             │
+│  Devices  (10%)  ▓▓▓▓▓░░░░░░░░░░░░░░░  25.0%             │
+│  FailRate (10%)  ▓▓▓░░░░░░░░░░░░░░░░░  16.1%  ↓-3.95p    │
+│                                                          │
+│  ──────────────────────── 100% baseline ───┤             │
+│                      ▲ 150% drift threshold              │
+└──────────────────────────────────────────────────────────┘
+```
+
+| Dimension | Weight | Baseline (90d) | Recent (7d) | Ratio | Weighted | Status |
+|-----------|--------|----------------|-------------|-------|----------|--------|
+| **Volume** | 25% | 22.8/day (1,485 over 65d) | 16.4/day (131 over 8d) | 71.7% | 17.9 | ✅ Stable |
+| **Applications** | 20% | 36 | 14 | 38.9% | 7.8 | ✅ Contracted |
+| **Resources** | 10% | 24 | 15 | 62.5% | 6.3 | ✅ Contracted |
+| **IPs** | 15% | 30 | 3 | 10.0% | 1.5 | ✅ Contracted |
+| **Locations** | 10% | 8 | 2 | 25.0% | 2.5 | ✅ Contracted |
+| **Devices** | 10% | 12 | 3 | 25.0% | 2.5 | ✅ Contracted |
+| **Failure Rate** | 10% | 4.71% | 0.76% | 16.1% | 1.6 | 🟢 Improved |
+| | | | | **Total** | **40.1** | |
+
+> ℹ️ IP, location, and device contraction is expected — the 90-day baseline captures VPN rotations, travel, and browser updates that don't recur in a 7-day window. This is **natural IP diversity compression**, not genuine scope reduction.
+
+### Interactive — New Items in Recent Period
+
+| Category | New Items (in Recent, not in Baseline) |
+|----------|---------------------------------------|
+| 🆕 **Apps** | `Microsoft Azure PowerShell` |
+| 🆕 **IPs** | `203.0.113.15` |
+| **Locations** | ✅ None new (US, CA — subset of baseline) |
+| **Devices** | ✅ None new (Edge 144, Chrome 143, Chrome Mobile 144 — all in baseline) |
+
+### Interactive — Apps Used in Recent Period
+
+```
+Microsoft 365 Copilot extension     One Outlook Web
+Office365 Shell WCSS-Client         Power Virtual Agents
+Microsoft 365 Security & Compliance Microsoft Teams Web Client
+Azure Portal                        Microsoft Flow Portal
+Azure AI Studio App                 Sentinel Platform Services App Reg
+Microsoft Azure PowerShell (NEW)    OfficeHome
+Power Platform Admin Center         Microsoft GitHub (1ES)
+```
+
+### Interactive — Baseline-Only Items (not seen in Recent)
+
+<details>
+<summary>22 apps used in baseline but not in recent 7 days (click to expand)</summary>
+
+```
+PROD-Alps                           Windows Sign In
+Cascade Authentication              Microsoft Graph Command Line Tools
+Microsoft Account Controls V2       My Signins
+Microsoft 365 Support Service       SharePoint Online Web Client Extensibility
+Security Copilot Portal             Graph Explorer
+Visual Studio Code                  Microsoft Teams Admin Portal Service
+Dataverse                           make.powerapps.com
+Office 365 SharePoint Online        Microsoft AppSource
+Microsoft 365 Admin portal          Dime Client
+PROD-SecurityMarketplacePortal      Microsoft Docs
+Microsoft Sentinel CLI              M365ChatClient
+```
+
+</details>
+
+---
+
+## Non-Interactive Sign-In Drift
+
+**Drift Score: 68.4** — ✅ Contracting scope (< 80)
+
+$$
+\text{DriftScore}_{NonInteractive} = 0.30V + 0.20A + 0.15R + 0.15IP + 0.10L + 0.10F
+$$
+
+```
+┌──────────────────────────────────────────────────────────┐
+│            NON-INTERACTIVE DRIFT SCORE: 68.4             │
+│                    ✅ Contracting Scope                 │
+├──────────────────────────────────────────────────────────┤
+│                                                          │
+│  Volume   (30%)  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░  84.0%             │
+│  Apps     (20%)  ▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░  51.3%             │
+│  Resources(15%)  ▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░░  56.1%             │
+│  IPs      (15%)  ▓▓▓░░░░░░░░░░░░░░░░░  16.7%             │
+│  Locations(10%)  ▓▓▓▓▓░░░░░░░░░░░░░░░  25.0%             │
+│  FailRate (10%)  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 195.0%  ↑+0.94p    │
+│                                                          │
+│  ──────────────────────── 100% baseline ───┤             │
+│                      ▲ 150% drift threshold              │
+└──────────────────────────────────────────────────────────┘
+```
+
+| Dimension | Weight | Baseline (90d) | Recent (7d) | Ratio | Weighted | Status |
+|-----------|--------|----------------|-------------|-------|----------|--------|
+| **Volume** | 30% | 903.3/day (69,551 over 77d) | 758.5/day (6,068 over 8d) | 84.0% | 25.2 | ✅ Stable |
+| **Applications** | 20% | 152 | 78 | 51.3% | 10.3 | ✅ Contracted |
+| **Resources** | 15% | 171 | 96 | 56.1% | 8.4 | ✅ Contracted |
+| **IPs** | 15% | 42 | 7 | 16.7% | 2.5 | ✅ Contracted |
+| **Locations** | 10% | 8 | 2 | 25.0% | 2.5 | ✅ Contracted |
+| **Failure Rate** | 10% | 0.99% | 1.93% | 195.0% | 19.5 | 🟡 Increased |
+| | | | | **Total** | **68.4** | |
+
+> ⚠️ **Failure Rate increase** (0.99% → 1.93%): Non-interactive failure rate nearly doubled. This is the only expanding dimension. However, the absolute rate remains low (< 2%) and is not corroborated by new IPs, new apps, or security alerts — likely transient token refresh failures or brief service disruptions rather than adversarial activity.
+
+### Non-Interactive — Notable Observations
+
+| Category | Finding |
+|----------|---------|
+| 🆕 **New IPs** | ✅ None — all 7 recent IPs were in baseline |
+| **Locations** | ✅ US, CA — subset of baseline |
+| **Apps (Recent)** | 78 of 152 baseline apps active — natural reduction for 7-day window |
+| **Resources (Recent)** | 96 of 171 baseline resources active — natural reduction |
+
+> ℹ️ App and resource sets were capped at 50 items in query output (`make_set` limit). The distinct **counts** above are accurate; individual new item enumeration may be incomplete for non-interactive sign-ins with 152+ baseline apps.
+
+### Non-Interactive — Sample Recent Apps (first 50 of 78)
+
+<details>
+<summary>Click to expand</summary>
+
+```
+Visual Studio Code                  Microsoft Edge
+Microsoft Threat Protection         Microsoft 365 Copilot extension
+Azure Virtual Desktop Client        Microsoft 365 Security & Compliance
+WindowsDefenderATP                  Microsoft Defender Mcp
+Sentinel Platform Services          Security Copilot API
+Microsoft Office 365 Portal         Azure Advanced Threat Protection
+Threat Intelligence Portal          Microsoft Exchange Online Protection
+Office365 Shell WCSS-Client         Office365 Shell WCSS-Server
+Azure Purview                       Microsoft Cloud App Security
+My Apps                             Microsoft MCP Server for Enterprise
+Azure Portal                        Windows Defender ATP for Flow
+Power Automate for Teams            Microsoft Teams (Teams & Channels)
+Microsoft Teams Graph Service       PowerPlatform-arm-Connector
+PowerPlatform-AzureMonitorLogs      Microsoft Insider Risk Management
+Asset Registry App                  Microsoft Azure PowerShell
+Microsoft_Azure_Monitoring          Project Babylon Ibiza Extension
+Power Virtual Agents                Microsoft_Azure_Billing
+Power Platform Copilot Governance   Microsoft_Azure_Security_Insights
+AppInsightsExtension                ADIbizaUX
+PowerPlatform-AzureSentinel         App Service
+Microsoft Teams Shifts              Microsoft Graph
+ActiveDirectoryIUX                  AADReporting
+M365ChatClient                      OfficeHome
+PowerPlatform-SecurityCopilot       Microsoft Sentinel CLI
+Power BI Service                    Skype Presence Service
+```
+
+</details>
+
+---
+
+## Account Configuration Changes
+
+**Source:** AuditLogs (97-day window)
+
+| Operation | Baseline (90d) | Recent (7d) | Trend |
+|-----------|----------------|-------------|-------|
+| Validate user authentication | 15 | 4 | ✅ Normal |
+| 🟡 **Update conditional access policy** | 2 | 3 | ⚠️ 3 changes in 7 days |
+| Group_GetDynamicGroupProperties | 1 | 0 | — |
+| Add member to group | 1 | 0 | — |
+| Update user | 1 | 0 | — |
+| Add group | 1 | 0 | — |
+| Add app role assignment grant to user | 3 | 0 | — |
+| Add app role assignment to service principal | 3 | 0 | — |
+| Add conditional access policy | 2 | 0 | — |
+| Remove app role assignment from service principal | 1 | 0 | — |
+| **Total** | **30** | **7** | ✅ Reduced |
+
+> 🟡 **Notable:** 3 Conditional Access policy updates in the last 7 days (vs. 2 over 90-day baseline). This is slightly elevated but consistent with active security administration by this user account. No suspicious escalation patterns detected.
+
+---
+
+## Pre-Computed Anomalies
+
+**Source:** Signinlogs_Anomalies_KQL_CL (14-day lookback)
+
+| Detected | Type | Artifact | Severity | Location | Hits | Geo Novelty |
+|----------|------|----------|----------|----------|------|-------------|
+| 2026-01-29 | NewNonInteractiveDeviceCombo | `Android\|Rich` | 🟡 Medium | Vancouver, CA | 5 | City: Yes |
+| 2026-01-27 | NewNonInteractiveIP | `192.0.2.55` | 🟡 Medium | Surrey, CA | 10 | City: Yes |
+| 2026-01-26 | NewNonInteractiveIP | `192.0.2.66` | 🟡 Medium | Toronto, CA | 19 | City: No |
+
+> 🟡 Three medium-severity anomalies detected, all non-interactive and all from **Canada** (consistent with user's established geography). City novelty flags (Vancouver, Surrey) are expected variations within the same country. The "Android|Rich" device combo is likely a Rich Client (Outlook Mobile or Teams) on Android. IP `192.0.2.66` is a Microsoft Azure IP. **No high-severity anomalies.**
+
+---
+
+## Identity Protection
+
+**Source:** SigninLogs risk fields (14-day lookback)
+
+| Time (UTC) | Risk Level | Risk State | Detection | IP | Location | App |
+|------------|------------|------------|-----------|-----|----------|-----|
+| 2026-02-07 00:33 | 🟡 Medium | 🟢 Dismissed | — | 198.51.100.42 | CA | Azure Portal |
+| 2026-02-07 00:33 | 🟡 Medium | 🟢 Dismissed | — | 198.51.100.42 | CA | Azure Portal |
+| 2026-02-07 00:03 | 🟡 Medium | 🟢 Dismissed | `unfamiliarFeatures` | 198.51.100.42 | CA | Azure Portal |
+
+> 🟢 All 3 Identity Protection events were **dismissed** (admin remediation or auto-dismiss). The `unfamiliarFeatures` detection on IP `198.51.100.42` (Canada) is consistent with occasional VPN/ISP variation. ConditionalAccessStatus was `success` on all events. **No active or unresolved risk.**
+
+---
+
+## Cloud App Activity Drift
+
+**Source:** CloudAppEvents (AccountObjectId: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+
+| Metric | Baseline (56d) | Recent (8d) | Trend |
+|--------|----------------|-------------|-------|
+| Total Events | 29,054 (518.8/day) | 6,148 (768.5/day) | 🟡 +48% daily volume |
+| Distinct Actions | 192 | 77 | ✅ Contracted |
+| Distinct Apps | 8 | 6 | ✅ Contracted |
+| Distinct Objects | 1,156 | 92 | ✅ Contracted |
+| Distinct IPs | 86 | 6 | ✅ Contracted |
+| Distinct Countries | 7 | 3 | ✅ Contracted |
+| Admin Operations | 72 (1.3/day) | 2 (0.25/day) | ✅ Reduced |
+| External User Ops | 0 | 0 | ✅ No change |
+| Impersonated Ops | 0 | 0 | ✅ No change |
+
+### CloudAppEvents — Notable New Action Types in Recent
+
+Some new actions appeared in the recent period not seen in baseline. Security-relevant actions:
+
+| Action | Risk Context |
+|--------|-------------|
+| `SecurityRoleUpdated` | 🟡 Role modification in cloud app |
+| `Write RoleAssignments` | 🟡 Azure RBAC role assignment |
+| `Delete RoleAssignments` | 🟡 Azure RBAC role removal |
+| `RegenerateKey Accounts` | 🟡 Key regeneration (Azure resource) |
+| `Update application – Certificates and secrets management` | 🟡 App credential management |
+| `Write AutomationAccounts` | 🔵 Azure Automation account changes |
+| `Write Runbooks` / `Publish Runbooks` | 🔵 Automation runbook authoring |
+| `Write UserAssignedIdentities` | 🔵 Managed identity creation |
+| `Delete Projects` / `Delete Accounts` | 🔵 Resource cleanup |
+
+> 🟡 While several security-relevant actions appeared in the recent window, the overall admin operation count is **significantly reduced** (72 → 2 flagged admin ops). The new Azure operations (VirtualMachines, Runbooks, CognitiveServices, etc.) are consistent with active Azure administration/development work. **No impersonation or external user activity.**
+
+### CloudAppEvents — Applications
+
+| Period | Applications |
+|--------|-------------|
+| Baseline (8) | Microsoft 365, Teams, Azure, SharePoint Online, Copilot Chat, OneDrive, Exchange Online, Power BI |
+| Recent (6) | Microsoft 365, Azure, Copilot Chat, SharePoint Online, Teams, OneDrive |
+| Missing in Recent | Exchange Online, Power BI |
+
+### CloudAppEvents — Countries
+
+| Period | Countries |
+|--------|-----------|
+| Baseline | CA, US, IE, MX, BR, HK, (empty) |
+| Recent | US, CA, (empty) |
+| ✅ No new countries | |
+
+---
+
+## Email Pattern Drift
+
+**Source:** EmailEvents (97-day window)
+
+| Metric | Baseline (84d) | Recent (8d) | Trend |
+|--------|----------------|-------------|-------|
+| Total Emails | 735 (8.8/day) | 59 (7.4/day) | ✅ Stable |
+| Sent | 62 (0.7/day) | 0 | 🟡 No outbound |
+| Received | 694 (8.3/day) | 59 (7.4/day) | ✅ Stable |
+| Inbound | 659 | 59 | ✅ Contracted |
+| Outbound | 0 | 0 | — |
+| Intra-Org | 76 | 0 | 🟡 None in recent |
+| Distinct Senders | 18 | 4 | ✅ Contracted |
+| Distinct Recipients | 4 | 0 | 🟡 No recipients |
+| Distinct Sender Domains | 11 | 1 | ✅ Contracted |
+| Threat Emails | 2 | 0 | 🟢 Improved |
+| Distinct Subjects | 120 | 14 | ✅ Contracted |
+
+### Email — Notable Patterns
+
+| Signal | Finding |
+|--------|---------|
+| 🟡 **Outbound email stopped** | 0 sent emails in 7-day window (vs. 62 in 90 days). Could be normal weekly variation — some weeks the user may not send from this mailbox. |
+| 🟡 **Intra-org email dropped to 0** | No intra-org email in recent period (vs. 76 in baseline). May indicate lighter internal collaboration this week. |
+| 🟢 **Sender domains narrowed** | Only `microsoft.com` in recent vs. 11 domains in baseline. All received email is from Microsoft notifications. |
+| 🟢 **Threat emails reduced** | 0 threat-flagged emails (vs. 2 in baseline). Positive signal. |
+| ✅ **Delivery** | All recent emails delivered successfully (no blocked). |
+
+> ℹ️ The email pattern shows strong contraction — the user is receiving only Microsoft notification emails and not sending. This is consistent with either lighter email week or primary mailbox usage on a different address. No indicators of email exfiltration or inbox rule abuse. OfficeActivity would need to be checked to rule out forwarding rules, but this was not flagged as a concern given the overall contraction pattern.
+
+---
+
+## Correlated Security Alerts
+
+**Source:** SecurityAlert joined with SecurityIncident (97-day window)
+
+| Product (Raw → Current Branding) | Baseline Alerts | Recent Alerts | Incidents (BL/RC) | Severities | Status | Classification |
+|----------------------------------|-----------------|---------------|-------------------|------------|--------|----------------|
+| **Microsoft Sentinel** | 35 | 3 | 32 / 3 | Medium, Low | Closed | BenignPositive |
+| **Microsoft Defender for Endpoint** | 14 | 0 | 9 / 0 | Medium | Closed | BenignPositive |
+| **Microsoft Defender for Cloud Apps** | 3 | 0 | 1 / 0 | Medium | Closed | BenignPositive |
+| **Microsoft Purview DLP** | 3 | 0 | 3 / 0 | Low | Closed | BenignPositive |
+| **Total** | **55** | **3** | **45 / 3** | | | |
+
+> 🟢 All 58 alerts across all products are **Closed / BenignPositive** — confirmed benign activity, not threats. Recent alert volume (3) is significantly lower than baseline rate (55 over 90 days ≈ 0.61/day → 3 over 7 days = 0.43/day). **No TruePositive or unresolved incidents.**
+
+---
+
+## Security Assessment
+
+| Factor | Finding |
+|--------|---------|
+| 🟢 **Interactive Drift Score** | 40.1 — contracting scope, well within normal variance |
+| 🟢 **Non-Interactive Drift Score** | 68.4 — contracting scope, within normal variance |
+| 🟢 **Failure Rate (Interactive)** | Improved: 4.71% → 0.76% |
+| 🟡 **Failure Rate (Non-Interactive)** | Increased: 0.99% → 1.93% — minor, not corroborated |
+| 🟢 **Security Alerts** | 58 alerts, ALL Closed/BenignPositive — no active threats |
+| 🟢 **Identity Protection** | 3 medium risk events, ALL dismissed — no active risk |
+| 🟡 **Pre-Computed Anomalies** | 3 medium anomalies (new NI IPs/devices in Canada) — geographic novelty only |
+| 🟢 **Cloud App Activity** | Daily volume +48% but admin ops reduced, no impersonation/external user activity |
+| 🟡 **CA Policy Changes** | 3 updates in 7 days (vs. 2 in 90d) — admin activity, not suspicious |
+| 🟢 **Email Patterns** | Contracted — only Microsoft notifications, no outbound, 0 threat emails |
+| 🟢 **New Interactive IPs** | 1 (`203.0.113.15`) — same ISP range as baseline IPs |
+| 🟢 **New Interactive Apps** | 1 (`Microsoft Azure PowerShell`) — standard admin tool |
+| ✅ **Impersonation** | None detected in any data source |
+| ✅ **External User Ops** | None detected |
+| ✅ **New Countries** | None new in any data source |
+
+---
+
+## Verdict
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│   OVERALL RISK:  🟢 LOW — No Scope Drift Detected               │
+│   Interactive Score:      40.1  (< 80 = Contracting)             │
+│   Non-Interactive Score:  68.4  (< 80 = Contracting)             │
+│   Root Cause: Natural diversity compression (90d vs 7d window)   │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### 🟢 Overall Risk Level: LOW
+
+**Root Cause Analysis:**
+The user's 7-day activity profile shows clear contraction across all dimensions compared to the 90-day baseline. This is the expected pattern for an active administrator account where the long baseline naturally captures a wider variety of tools, IPs (VPN rotations, travel), and applications than any single 7-day window would exhibit.
+
+**Key Findings:**
+1. **No scope expansion** — Both drift scores are well below the 100 stable threshold
+2. **No active security threats** — All alerts are Closed/BenignPositive, all Identity Protection risks are dismissed
+3. **Single new IP** (`203.0.113.15`) is in the same ISP range as established baseline IPs
+4. **Single new app** (`Microsoft Azure PowerShell`) is a standard Microsoft admin tool, consistent with the user's Azure administration role
+5. **Non-interactive failure rate increase** (0.99% → 1.93%) is minor and likely due to transient token refresh errors, not adversarial activity
+6. **CA policy changes** (3 in 7 days) are consistent with active security administration by a privileged user
+
+**Recommendations:**
+- ✅ No immediate action required
+- 🔵 Continue standard monitoring
+- 🔵 Review CA policy changes if policy governance audit is needed
+- 🔵 Periodic re-assessment recommended in 30 days to track trends
+
+---
+
+## Appendix: Drift Score Formulas
+
+### Interactive (7 Dimensions)
+
+$$
+\text{DriftScore}_{Interactive} = 0.25V + 0.20A + 0.10R + 0.15IP + 0.10L + 0.10D + 0.10F
+$$
+
+### Non-Interactive (6 Dimensions)
+
+$$
+\text{DriftScore}_{NonInteractive} = 0.30V + 0.20A + 0.15R + 0.15IP + 0.10L + 0.10F
+$$
+
+### Interpretation Scale
+
+| Score | Meaning | Action |
+|-------|---------|--------|
+| < 80 | Contracting scope | ✅ Normal |
+| 80–120 | Stable / normal variance | ✅ No action |
+| 120–150 | Moderate deviation | 🟡 Monitor |
+| > 150 | Significant drift | 🔴 FLAG |
+| > 250 | Extreme drift | 🔴 CRITICAL |

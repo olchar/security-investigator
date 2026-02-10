@@ -321,7 +321,9 @@ When explaining technical concepts, use **Microsoft Learn MCP** to ground respon
 | **kql-query-authoring** | KQL query creation using schema validation, community examples, Microsoft Learn | "write KQL", "create KQL query", "help with KQL", "query [table]" |
 | **authentication-tracing** | Azure AD authentication chain forensics: SessionId analysis, token reuse vs interactive MFA, geographic anomaly investigation, risk assessment | "trace authentication", "SessionId analysis", "token reuse", "geographic anomaly", "impossible travel" |
 | **ca-policy-investigation** | Conditional Access policy forensics: sign-in failure correlation, policy state changes, security bypass detection, privilege abuse analysis | "Conditional Access", "CA policy", "device compliance", "policy bypass", "53000", "50074", "530032" |
-| **scope-drift-detection** | Scope drift analysis for service principals AND user accounts: 90-day behavioral baseline vs. 7-day recent activity, weighted Drift Score (5 dimensions for SPNs; 7 dimensions for user interactive including apps/devices; 6 for non-interactive), correlated with AuditLogs, DeviceNetworkEvents, SecurityAlert, SigninLogs_Anomalies_KQL_CL, and Identity Protection. Supports inline chat and markdown file output | "scope drift", "service principal drift", "SPN behavioral change", "baseline deviation", "access expansion", "automation account drift", "user drift", "user behavioral change" |
+| **scope-drift-detection/spn** | SPN scope drift analysis: 90-day behavioral baseline vs. 7-day recent activity for service principals. Weighted Drift Score (5 dimensions: Volume, Resources, IPs, Locations, FailRate), correlated with SecurityAlert, AuditLogs, DeviceNetworkEvents. Supports inline chat and markdown file output | "scope drift", "service principal drift", "SPN behavioral change", "SPN drift", "baseline deviation", "access expansion", "automation account drift" |
+| **scope-drift-detection/user** | User account scope drift analysis: 90-day behavioral baseline vs. 7-day recent activity for user accounts (UPNs). Two Drift Scores — Interactive (7 dimensions) and Non-Interactive (6 dimensions), correlated with SecurityAlert, AuditLogs, SigninLogs_Anomalies_KQL_CL, Identity Protection, CloudAppEvents (cloud app activity drift), and EmailEvents (email pattern drift). Supports inline chat and markdown file output | "user drift", "user behavioral change", "user scope drift", "UPN drift", "sign-in drift", "user baseline deviation" |
+| **scope-drift-detection/device** | Device/endpoint scope drift analysis: configurable-window process baseline for devices (fleet-wide or single-device). Weighted Drift Score (5 dimensions: Volume, Processes, Accounts, Process Chains, Signing Companies), correlated with SecurityAlert, Heartbeat (uptime corroboration), DeviceProcessEvents. Supports inline chat and markdown file output | "device drift", "device process drift", "endpoint drift", "process baseline", "device behavioral change", "device scope drift" |
 | **heatmap-visualization** | Interactive heatmap visualization for Sentinel data: attack patterns by time, activity grids, IP vs hour matrices, threat intel drill-down panels | "heatmap", "show heatmap", "visualize patterns", "activity grid" |
 | **geomap-visualization** | Interactive world map visualization for Sentinel data: attack origin maps, geographic threat distribution, IP geolocation with enrichment drill-down | "geomap", "world map", "attack map", "show on map", "attack origins" |
 | **mcp-usage-monitoring** | MCP server usage monitoring and audit: Graph MCP endpoint analysis, Sentinel MCP auth events, Azure MCP ARM operations, workspace query governance, MCP proportion analysis, sensitive API detection, off-hours activity, user attribution, MCP Usage Score with 5 health/risk dimensions. Supports inline chat and markdown file output | "MCP usage", "MCP server monitoring", "MCP activity", "MCP audit", "Graph MCP", "Sentinel MCP", "Azure MCP", "AI agent monitoring", "tool usage monitoring", "MCP breakdown", "who is using MCP" |
@@ -329,11 +331,13 @@ When explaining technical concepts, use **Microsoft Learn MCP** to ground respon
 ### Skill Detection Workflow
 
 1. **Parse user request** for trigger keywords from table above
-2. **If match found:** Read `.github/skills/<skill-name>/SKILL.md`
+2. **If match found:** Read the skill file:
+   - Standard skills: `.github/skills/<skill-name>/SKILL.md`
+   - Subfolder skills (e.g., scope-drift-detection): `.github/skills/<parent-skill>/<sub-skill>/SKILL.md`
 3. **Follow skill-specific workflow** (inherits global rules from this file)
 4. **Future skills:** Check `.github/skills/` folder with `list_dir` to discover new workflows
 
-**Skill files location:** `.github/skills/<skill-name>/SKILL.md`
+**Skill files location:** `.github/skills/<skill-name>/SKILL.md` or `.github/skills/<parent-skill>/<sub-skill>/SKILL.md`
 
 ---
 

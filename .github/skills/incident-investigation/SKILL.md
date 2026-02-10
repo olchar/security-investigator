@@ -299,7 +299,7 @@ For EACH user selected by the user:
 1. Get User Object ID from Microsoft Graph
 2. Calculate date ranges based on investigation type (Standard/Quick/Comprehensive)
 3. Run parallel data collection:
-   - Sign-in anomalies (SigninLogs_Anomalies_KQL_CL)
+   - Sign-in anomalies (Signinlogs_Anomalies_KQL_CL — note lowercase 'l' in "logs")
    - Sign-in statistics (apps, locations, IPs)
    - Audit log events
    - Office 365 activity

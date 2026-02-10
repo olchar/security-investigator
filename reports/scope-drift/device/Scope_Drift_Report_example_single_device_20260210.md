@@ -1,0 +1,352 @@
+# Device Scope Drift Report — contoso-vd-0.contoso.com
+
+**Generated:** 2026-02-10 16:20 UTC
+**Workspace:** la-contoso (`xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`)
+**Data Source:** Sentinel Data Lake (`DeviceProcessEvents` via `query_lake`)
+**Baseline Window:** 90 days (2025-11-06 → 2026-02-03)
+**Recent Window:** 7 days (2026-02-03 → 2026-02-10)
+**First Telemetry:** 2025-11-11
+
+| Property | Value |
+|----------|-------|
+| **Device Name** | contoso-vd-0.contoso.com |
+| **OS** | Windows 11 |
+| **Device Type** | Workstation |
+| **Onboarding Status** | Onboarded |
+| **Last Seen** | 2026-02-10 14:33 UTC |
+
+---
+
+## Verdict
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                                                                      │
+│                   🟢  LOW RISK — STABLE DEVICE                       │
+│                                                                      │
+│   Drift Score: 65.4%  (below 100% baseline — no scope expansion)     │
+│                                                                      │
+│   • No suspicious first-seen processes (all Microsoft updates)       │
+│   • No new signing companies in recent window                        │
+│   • No reconnaissance / lateral movement / persistence detected      │
+│   • All 7 security incidents: BenignPositive / Closed                │
+│   • Consistent Mon-Fri corporate power schedule                      │
+│   • Only system/service accounts active (no interactive user)        │
+│                                                                      │
+│   Recommendation: No action required. Continue baseline monitoring.  │
+│                                                                      │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Executive Summary
+
+**contoso-vd-0.contoso.com** is a Windows 11 workstation operating on a predictable Mon–Fri corporate schedule. The device shows **no scope expansion** and **no suspicious behavioral changes** in the recent 7-day window compared to its 90-day baseline.
+
+**Drift Score: 65.4%** — below the 100% baseline threshold. The sub-100% score is expected: cumulative diversity metrics (distinct processes, chains) naturally accumulate fewer unique values over 7 days vs 90 days. When normalized to daily averages, process execution volume is **stable at 110.4%** of baseline.
+
+Key findings:
+- 🟢 All 34 first-seen processes are **Microsoft update artifacts** (Defender definition patches, Edge updates, Office deployment tools)
+- 🟢 All 30 new process chains are **SYSTEM-account update operations**
+- 🟢 Zero new signing companies — identical software publisher landscape
+- 🟢 Zero notable command-line patterns (no recon, lateral movement, persistence, or exfiltration)
+- 🟢 7 historical security incidents — all **BenignPositive / Closed** (RDP analytics rules)
+- 🔵 `jsmith` user account absent from recent 7-day window (only system/service accounts active)
+- 🟢 Heartbeat pattern fully consistent with established Mon–Fri schedule
+
+---
+
+## Drift Score — Dimension Chart
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│            DEVICE SCOPE DRIFT — DIMENSION CHART              │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│  Volume   [0.30]  █████████████████─────────────  110.4%     │
+│  Process  [0.25]  █████─────────────────────────   30.8%     │
+│  Account  [0.15]  ████████──────────────────────   50.0%     │
+│  Chains   [0.20]  █████─────────────────────────   35.6%     │
+│  Company  [0.10]  ███████████████───────────────  100.0%     │
+│                                                              │
+│                                  ↑ 100%                      │
+├──────────────────────────────────────────────────────────────┤
+│  DRIFT SCORE: 65.4%              ▸ Verdict: 🟢 STABLE       │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Scale:** 0%──────────────────────100%──────────────────────200%
+**Bar:** █ = filled (recent/baseline ratio) │ ─ = unfilled
+
+### Dimension Breakdown
+
+| # | Dimension | Weight | Baseline (90d) | Recent (7d) | Ratio | Weighted | Status |
+|---|-----------|--------|----------------|-------------|-------|----------|--------|
+| 1 | **Volume** (daily avg) | 0.30 | 647.6 /day | 714.9 /day | 110.4% | 33.12 | 🟢 Stable |
+| 2 | **Processes** (distinct) | 0.25 | 545 | 168 | 30.8% | 7.70 | 🔵 Expected¹ |
+| 3 | **Accounts** (distinct) | 0.15 | 6 | 3 | 50.0% | 7.50 | 🟡 Notable² |
+| 4 | **Chains** (distinct) | 0.20 | 725 | 258 | 35.6% | 7.12 | 🔵 Expected¹ |
+| 5 | **Companies** (distinct) | 0.10 | 8 | 8 | 100.0% | 10.00 | 🟢 Stable |
+| | | | | | **Total** | **65.44** | |
+
+> ¹ **Expected contraction:** Cumulative distinct counts over 7 days cannot match 90-day accumulation. Per-day unique process counts are consistent (recent: ~105–126/day vs baseline: ~100–120/day).
+>
+> ² **Notable:** 3 accounts dropped from recent window (`jsmith`, `umfd-2`, `dwm-2`). See [Account Landscape](#account-landscape) for analysis.
+
+### Raw Totals
+
+| Metric | Baseline (90d) | Recent (7d) |
+|--------|----------------|-------------|
+| Total events | 58,286 | 5,004 |
+| Distinct processes | 545 | 168 |
+| Distinct accounts | 6 | 3 |
+| Distinct process chains | 725 | 258 |
+| Distinct signing companies | 8 | 8 |
+| Active days (Heartbeat) | 72 | 7 |
+
+---
+
+## First-Seen Processes (Recent Window)
+
+**Count: 34** — ✅ All are Microsoft update artifacts. No suspicious first-seen processes.
+
+Every first-seen process in the recent 7-day window is a **version-stamped Microsoft binary** that gets a unique filename per release cycle. This is a known false-positive pattern documented in the SKILL.md pitfalls section.
+
+| Category | Count | Examples | Account | Assessment |
+|----------|-------|----------|---------|------------|
+| 📦 **Defender Definition Patches** | ~20 | `AM_Delta_Patch_1.1.25010.7.exe`, `AM_Delta_Patch_1.1.25020.3.exe`, ... | SYSTEM | 🟢 Expected — daily antimalware definition updates |
+| 📦 **Edge Browser Updates** | ~5 | `MicrosoftEdge_X64_133.0.3065.39.exe`, `MicrosoftEdge_X64_133.0.3065.51.exe`, ... | SYSTEM | 🟢 Expected — browser auto-update channel |
+| 📦 **Office Deployment Tool** | ~5 | `odtxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.tmp.exe`, ... | SYSTEM | 🟢 Expected — Office Click-to-Run temp binaries |
+| 📦 **Security Health Setup** | ~2 | `SecurityHealthSetup.exe` variants | SYSTEM | 🟢 Expected — Windows Security component update |
+| 📦 **Other Microsoft Updates** | ~2 | `MicrosoftEdgeUpdateSetup.exe`, `setup.exe` | SYSTEM | 🟢 Expected — update infrastructure |
+
+> **Why these appear as "first-seen":** Each Defender definition patch, Edge update, and Office deployment temp file contains a version number or GUID in the filename, making every release a unique process name. The underlying behavior is identical — only the version stamp changes.
+
+---
+
+## New Process Chains (Recent Window)
+
+**Count: 30** — ✅ All are SYSTEM-account update operations. No suspicious chains.
+
+All 30 new process chains follow the same pattern: `svchost.exe → [update component] → [versioned binary]`, executed under the SYSTEM account via Windows Update, Defender updates, or Office servicing.
+
+| Chain Pattern | Count | Account | Assessment |
+|---------------|-------|---------|------------|
+| `svchost.exe → MpSigStub.exe → AM_Delta_Patch_*.exe` | ~15 | SYSTEM | 🟢 Defender definition update chain |
+| `svchost.exe → MicrosoftEdgeUpdate.exe → MicrosoftEdge_X64_*.exe` | ~5 | SYSTEM | 🟢 Edge browser update chain |
+| `svchost.exe → OfficeClickToRun.exe → odt*.tmp.exe` | ~5 | SYSTEM | 🟢 Office servicing chain |
+| `svchost.exe → SecurityHealthSetup.exe` | ~2 | SYSTEM | 🟢 Windows Security update |
+| `svchost.exe → MicrosoftEdgeUpdateSetup.exe → setup.exe` | ~3 | SYSTEM | 🟢 Edge updater bootstrap |
+
+> No chains involving interactive user accounts, unknown parent processes, or suspicious execution patterns (encoded commands, download cradles, LOLBIN abuse).
+
+---
+
+## Security Alerts & Incidents
+
+**Total incidents involving this device (90d + 7d): 7**
+**Recent window (7d): 0**
+**All 7 incidents: BenignPositive / Closed** ✅
+
+| # | Incident | Title | Severity | Classification | Status | Date | Tactics |
+|---|----------|-------|----------|----------------|--------|------|---------|
+| 1 | #1067 | Rare RDP Connections | High | BenignPositive | Closed | 2026-01-27 | LateralMovement (T1021) |
+| 2 | #1062 | RDP Nesting | Medium | BenignPositive | Closed | 2026-01-26 | LateralMovement (T1021) |
+| 3 | #1035 | Rare RDP Connections | Medium | BenignPositive | Closed | 2026-01-06 | LateralMovement (T1021) |
+| 4 | #1010 | RDP Nesting | Low | BenignPositive | Closed | 2025-12-08 | LateralMovement (T1021) |
+| 5 | #1009 | Rare RDP Connections | Low | BenignPositive | Closed | 2025-12-08 | LateralMovement (T1021) |
+| 6 | #998 | RDP Nesting | High | BenignPositive | Closed | 2025-11-29 | LateralMovement (T1021) |
+| 7 | #997 | Rare RDP Connections | High | BenignPositive | Closed | 2025-11-29 | LateralMovement (T1021) |
+
+**Analysis:**
+- 🟢 All incidents are **RDP analytics rule** detections from Microsoft Sentinel (Scheduled Alerts)
+- 🟢 All classified **BenignPositive** — reviewed and determined to be legitimate RDP activity
+- 🟢 Incidents appear in pairs ("Rare RDP Connections" + "RDP Nesting") on same/adjacent dates — consistent with lab RDP patterns
+- 🟢 **No incidents in the recent 7-day window** — last incident was Jan 27, 2026
+- 🔵 Pattern is recurring (~biweekly), suggesting a scheduled task or regular admin RDP session triggering the analytics
+
+---
+
+## New Signing Companies
+
+**Count: 0** — ✅ No new signing companies appeared in the recent window.
+
+All 8 signing companies present in the recent window match the baseline exactly. The software publisher landscape is unchanged.
+
+---
+
+## Notable Command-Line Patterns
+
+**Count: 0** — ✅ No reconnaissance, lateral movement, persistence, or exfiltration patterns detected.
+
+The query scanned for:
+- Reconnaissance: `whoami`, `ipconfig`, `net user`, `nltest`, `systeminfo`, `qwinsta`
+- Lateral movement: `PsExec`, `wmic /node`, `Enter-PSSession`
+- Persistence: `schtasks /create`, `reg add.*Run`, `New-Service`
+- Exfiltration: `Invoke-WebRequest`, `curl`, `certutil -urlcache`, base64 encoded commands
+
+None were found in the recent 7-day window.
+
+---
+
+## Account Landscape
+
+### Baseline vs Recent Comparison
+
+| Account | Baseline Events | Baseline Processes | Recent Events | Recent Processes | Status |
+|---------|----------------|-------------------|---------------|-----------------|--------|
+| **system** | 49,818 | 481 | 4,405 | 156 | 🟢 Active — primary account |
+| **local service** | 4,321 | 16 | 324 | 14 | 🟢 Active — consistent |
+| **network service** | 3,083 | 10 | 265 | 10 | 🟢 Active — consistent |
+| **jsmith** | 1,062 | 66 | — | — | 🟡 Absent from recent |
+| **umfd-2** | 6 | 1 | — | — | 🔵 Absent (RDP session artifact) |
+| **dwm-2** | 6 | 1 | — | — | 🔵 Absent (RDP session artifact) |
+
+### Analysis
+
+- 🟢 **Core service accounts stable:** `system`, `local service`, and `network service` maintain consistent process diversity between baseline and recent windows
+- 🟡 **`jsmith` inactive:** This interactive user account had 1,062 process events (66 distinct processes) during the baseline but zero activity in the recent 7 days. This indicates the workstation is running unattended — only system-level processes are executing. Possible explanations: vacation, work-from-home, or using a different workstation. **Not a security concern** — the absence of user activity does not indicate compromise
+- 🔵 **`umfd-2` and `dwm-2` absent:** These are Windows Desktop Window Manager and User Mode Font Driver accounts associated with RDP sessions (session ID 2). Their absence in recent confirms no RDP sessions in the last 7 days, which aligns with the absence of `jsmith`
+
+---
+
+## Uptime & Power Schedule (Heartbeat Analysis)
+
+**Active days in lookback: 79** (out of 92 calendar days)
+**Power schedule: Corporate Mon–Fri with weekend shutdown**
+
+### Weekly Pattern
+
+| Day | Typical Start (UTC) | Typical End (UTC) | Heartbeats | Status |
+|-----|--------------------|--------------------|------------|--------|
+| **Monday** | ~14:20 | 23:59 | ~575 | 🟢 Delayed start (auto-power-on) |
+| **Tuesday** | 00:00 | 23:59 | ~880 | 🟢 Full day |
+| **Wednesday** | 00:00 | 23:59 | ~880 | 🟢 Full day |
+| **Thursday** | 00:00 | 23:59 | ~880 | 🟢 Full day |
+| **Friday** | 00:00 | 23:59 | ~880 | 🟢 Full day |
+| **Saturday** | 00:00 | ~05:00 | ~300 | 🟢 Abbreviated (scheduled shutdown) |
+| **Sunday** | — | — | 0 | 🟢 Offline (scheduled) |
+
+### Recent Period Heartbeats (Feb 3–10)
+
+| Date | Day | First HB | Last HB | Count | Pattern Match |
+|------|-----|----------|---------|-------|---------------|
+| Feb 3 | Tue | 00:00 | 23:59 | 885 | ✅ Normal full day |
+| Feb 4 | Wed | 00:00 | 23:59 | 893 | ✅ Normal full day |
+| Feb 5 | Thu | 00:00 | 23:59 | 882 | ✅ Normal full day |
+| Feb 6 | Fri | 00:00 | 23:59 | 881 | ✅ Normal full day |
+| Feb 7 | Sat | 00:00 | 05:00 | 301 | ✅ Normal Saturday shutdown |
+| Feb 8 | Sun | — | — | 0 | ✅ Normal Sunday offline |
+| Feb 9 | Mon | 14:21 | 23:59 | 579 | ✅ Normal Monday delayed start |
+| Feb 10 | Tue | 00:00 | 16:08 | 410 | ✅ Partial day (still running) |
+
+**Assessment:** 🟢 The recent 7-day heartbeat pattern is **perfectly consistent** with the established 90-day baseline. No unexpected power-offs, no midnight startups, no out-of-schedule activity.
+
+---
+
+## Daily Process Volume (Per-Session Analysis)
+
+### Recent Period Daily Breakdown
+
+| Date | Day | Events | Unique Processes | Accounts | Assessment |
+|------|-----|--------|-----------------|----------|------------|
+| Feb 3 | Tue | 957 | 118 | 3 | 🟢 Normal |
+| Feb 4 | Wed | 968 | 120 | 3 | 🟢 Normal |
+| Feb 5 | Thu | 999 | 123 | 3 | 🟢 Normal |
+| Feb 6 | Fri | 1,000 | 126 | 3 | 🟢 Normal |
+| Feb 7 | Sat | 167 | 43 | 3 | 🟢 Normal (abbreviated) |
+| Feb 9 | Mon | 906 | 119 | 3 | 🟢 Normal |
+| Feb 10 | Tue | 514 | 105 | 3 | 🟢 Partial day (in progress) |
+
+### Baseline Context
+
+| Metric | Baseline Weekday Avg | Recent Weekday Avg | Trend |
+|--------|---------------------|-------------------|-------|
+| Events/day | ~830–950 | ~957–1,000 | 🟢 Slight increase, within normal band |
+| Unique processes/day | ~100–120 | ~118–126 | 🟢 Consistent |
+| Accounts/day | 3 (typical), 6 (update days) | 3 | 🟢 Consistent |
+
+### Baseline Notable Spikes
+
+Several baseline days showed elevated activity (1,000–1,650 events with 6 accounts and 160–185 processes). These correspond to **scheduled update deployments** and are not anomalies:
+
+| Date | Events | Processes | Accounts | Explanation |
+|------|--------|-----------|----------|-------------|
+| Nov 18 | 1,651 | 182 | 6 | Update deployment day |
+| Nov 28 | 1,040 | 164 | 6 | Update deployment day |
+| Dec 8 | 1,364 | 185 | 6 | Update deployment day |
+| Jan 6 | 1,044 | 160 | 6 | Update deployment day |
+| Jan 13 | 1,070 | 164 | 6 | Update deployment day |
+| Jan 26 | 1,263 | 184 | 6 | Update deployment day |
+
+> These update days show a **biweekly pattern** and involve 6 accounts (adding `jsmith`, `umfd-2`, `dwm-2` to the standard 3). The elevated activity is consistent with Windows Update + Defender definition + Office servicing happening in a maintenance window.
+
+---
+
+## Security Assessment
+
+| Factor | Finding | Risk |
+|--------|---------|------|
+| 🟢 **First-Seen Processes** | 34 — all Microsoft update artifacts (Defender patches, Edge, Office, SecurityHealth) | None |
+| 🟢 **New Process Chains** | 30 — all SYSTEM-account update operations via svchost.exe | None |
+| 🟢 **New Signing Companies** | 0 — identical publisher landscape to baseline | None |
+| 🟢 **Command-Line Patterns** | 0 — no recon, lateral movement, persistence, or exfil patterns detected | None |
+| 🟢 **Security Incidents** | 7 total (0 in recent window) — all BenignPositive/Closed RDP analytics | None |
+| 🟢 **Heartbeat Pattern** | Perfectly consistent Mon–Fri corporate schedule, no anomalies | None |
+| 🟢 **Volume Trend** | 110.4% of baseline daily average — stable, within normal variance | None |
+| 🟢 **Signing Company Landscape** | 8/8 companies present in both windows — no new publishers | None |
+| 🟡 **User Account Inactive** | `jsmith` absent from recent 7d — workstation running unattended | Informational |
+| 🔵 **RDP Session Accounts** | `umfd-2`, `dwm-2` absent — no RDP sessions in recent window | Informational |
+
+---
+
+## Methodology
+
+### Drift Score Formula
+
+$$\text{DriftScore} = 0.30 \times V + 0.25 \times P + 0.15 \times A + 0.20 \times C + 0.10 \times S$$
+
+Where:
+- **V** = Volume ratio (recent daily avg / baseline daily avg × 100)
+- **P** = Process ratio (recent distinct / baseline distinct × 100)
+- **A** = Account ratio (recent distinct / baseline distinct × 100)
+- **C** = Chain ratio (recent distinct / baseline distinct × 100)
+- **S** = Company ratio (recent distinct / baseline distinct × 100)
+
+### Score Interpretation
+
+| Range | Interpretation |
+|-------|---------------|
+| < 80% | Contracting scope — **STABLE** (sub-100% is expected for short recent windows) |
+| 80–120% | Baseline-consistent — **STABLE** |
+| 120–200% | Moderate expansion — **REVIEW** recommended |
+| > 200% | Significant expansion — **INVESTIGATE** immediately |
+
+### Data Sources Queried
+
+| Query | Source | Purpose | Result |
+|-------|--------|---------|--------|
+| Q14 | Data Lake — DeviceProcessEvents | Daily summary (volume, processes, accounts) | 79 days of data |
+| Q15 | Data Lake — DeviceProcessEvents | Baseline vs recent totals | BL: 58,286 events / RC: 5,004 events |
+| Q16 | Data Lake — DeviceProcessEvents | First-seen processes in recent window | 34 (all Microsoft updates) |
+| Q17 | Data Lake — DeviceProcessEvents | New process chains in recent window | 30 (all SYSTEM update chains) |
+| Q18 | Data Lake — SecurityAlert + SecurityIncident | Correlated alerts/incidents for this device | 7 incidents (all BenignPositive) |
+| Q19 | Data Lake — DeviceProcessEvents | New signing companies in recent window | 0 |
+| Q20 | Data Lake — DeviceProcessEvents | Notable command-line patterns | 0 |
+| Q21 | Data Lake — Heartbeat | Daily uptime/power schedule | 79 active days, consistent pattern |
+| Q22 | Data Lake — DeviceProcessEvents | Per-session daily volume breakdown | Consistent weekday volume |
+
+### Known Pitfalls Applied
+
+| Pitfall | How Addressed |
+|---------|---------------|
+| **Version-stamped process names** | Identified all 34 first-seen processes as versioned Microsoft update binaries — not true "new" processes |
+| **Cumulative distinct count bias** | Noted that P (30.8%) and C (35.6%) ratios reflect 7d vs 90d accumulation window, not actual contraction. Per-day diversity is consistent |
+| **Weekend/off-hours bias** | Saturday and Sunday patterns factored into daily average calculations via Heartbeat corroboration |
+| **SecurityAlert.Status immutability** | Joined SecurityAlert with SecurityIncident to get true investigation status (all Closed/BenignPositive) |
+
+---
+
+*Report generated by Security Investigation Automation — Device Scope Drift Skill v1.0*
+*Workspace: la-contoso | Query tool: Sentinel Data Lake MCP (`query_lake`)*

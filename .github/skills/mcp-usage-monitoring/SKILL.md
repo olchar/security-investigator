@@ -725,7 +725,7 @@ SigninLogs
     tostring(Status.errorCode) as ErrorCode,
     ConditionalAccessStatus, AuthenticationRequirement, ClientAppUsed,
     tostring(DeviceDetail.operatingSystem) as OS,
-    parse_json(LocationDetails).countryOrRegion as Country
+    tostring(LocationDetails.countryOrRegion) as Country
 | order by TimeGenerated desc
 ```
 
@@ -771,6 +771,7 @@ LAQueryLogs
     QueryCount = count(),
     DistinctUsers = dcount(AADEmail),
     AvgCPUMs = avg(StatsCPUTimeMs),
+    AvgRowsPerQuery = avg(ResponseRowCount),
     TotalRowsReturned = sum(ResponseRowCount),
     FirstSeen = min(TimeGenerated),
     LastSeen = max(TimeGenerated)
@@ -1100,7 +1101,7 @@ CloudAppEvents
         RecordType == 379, "Direct KQL",
         "Other"),
     IsSuccess = isempty(FailureReason) or FailureReason == ""
-| where Operation has "Completed" or RecordType == 379  // Focus on completed events
+| where Operation contains "Completed" or RecordType == 379  // Focus on completed events; use 'contains' not 'has' — CamelCase has no word boundaries
 | summarize
     TotalCalls = count(),
     SuccessCount = countif(IsSuccess),
@@ -1202,7 +1203,7 @@ CloudAppEvents
         RecordType == 379, "Direct KQL",
         "Other"),
     IsSuccess = isempty(FailureReason) or FailureReason == ""
-| where Operation has "Completed" or RecordType == 379
+| where Operation contains "Completed" or RecordType == 379  // 'contains' not 'has' — CamelCase
 | summarize
     Calls = count(),
     SuccessCount = countif(IsSuccess),
@@ -1241,7 +1242,7 @@ CloudAppEvents
         "Other"),
     IsSuccess = isempty(FailureReason) or FailureReason == "",
     HasKQLQuery = InputParams has "query"
-| where Operation has "Completed" or RecordType == 379
+| where Operation contains "Completed" or RecordType == 379  // 'contains' not 'has' — CamelCase
 | summarize
     TotalCalls = count(),
     SuccessCount = countif(IsSuccess),
@@ -1515,8 +1516,8 @@ When outputting to markdown file, include everything from the inline format PLUS
 | ... | ... | ... | ... | ... |
 
 ### Query Volume (Analytics Tier — LAQueryLogs)
-| AppId | Service | Queries | Users | Avg CPU (ms) | Rows Returned |
-|-------|---------|---------|-------|-------------|---------------|
+| AppId | Service | Queries | Users | Avg CPU (ms) | Avg Rows/Query | Total Rows Returned |
+|-------|---------|---------|-------|-------------|----------------|---------------------|
 | ... | ... | ... | ... | ... | ... |
 
 ---
@@ -1673,7 +1674,15 @@ MCP queries represent X% of combined query volume:
 
 ## Appendix: Query Details
 
-<All KQL queries used, with timestamps and result counts>
+Render a single markdown table summarizing all queries executed. **Do NOT include full KQL text** — the canonical queries are already documented in this SKILL.md file. The appendix serves as an audit trail only.
+
+| Query | Table(s) | Records Scanned | Results | Execution |
+|-------|----------|----------------:|--------:|----------:|
+| Q1 — Graph MCP Daily Usage | MicrosoftGraphActivityLogs | X,XXX | N rows | X.XXs |
+| Q2 — Top Graph Endpoints | MicrosoftGraphActivityLogs | X,XXX | N rows | X.XXs |
+| ... | ... | ... | ... | ... |
+
+*Query definitions: see the Sample KQL Queries section in this SKILL.md file.*
 ```
 
 ---
@@ -1776,16 +1785,19 @@ For full query definitions, deployment checklist, and companion analytics rule t
 
 > 📘 **Takeaway:** When encountering an unknown AppId in `LAQueryLogs`, check the `RequestClientApp` field first — it reliably reveals the actual source (e.g., `AppInsightsPortalExtension`, `ASI_Portal`). Do not assume an AppId is MCP-related without verifying via Graph API SPN lookup, sign-in logs, and query content analysis.
 
-### CloudAppEvents ActionType Matching
-**Problem:** `ActionType` values in `CloudAppEvents` for Sentinel operations use CamelCase without word boundaries (e.g., `SentinelAIToolRunCompleted`, `KQLQueryCompleted`). The `has` operator requires word boundaries and will **NOT** match these values.  
-**Solution:** Always use `contains` (not `has`) when filtering `ActionType` for Sentinel/KQL operations:
+### CloudAppEvents CamelCase Matching (`ActionType` AND `Operation`)
+**Problem:** Both `ActionType` and `RawEventData.Operation` values in `CloudAppEvents` for Sentinel operations use CamelCase without word boundaries (e.g., `SentinelAIToolRunCompleted`, `KQLQueryCompleted`). The `has` operator requires word boundaries and will **NOT** match these values. **Field-tested Feb 2026:** `has "Completed"` returns `false` for ALL Operation values including `KQLQueryCompleted` — the `has` operator fails on substrings within CamelCase tokens.  
+**Solution:** Always use `contains` (not `has`) when filtering `ActionType` or `Operation` for Sentinel/KQL operations:
 ```kql
 // ✅ CORRECT — 'contains' works with CamelCase
 | where ActionType contains "Sentinel" or ActionType contains "KQL"
+| where Operation contains "Completed"
 
 // ❌ WRONG — 'has' requires word boundaries, fails on CamelCase
 | where ActionType has "Sentinel" or ActionType has "KQL"
+| where Operation has "Completed"  // Returns 0 rows — silently drops ALL MCP events!
 ```
+**Impact if missed:** Query 20 (MCP vs Direct KQL delineation) will show 0 MCP events and ONLY Direct KQL — because MCP events (RecordType 403) are filtered out by `Operation has "Completed"`, while Direct KQL events (RecordType 379) survive via the `OR RecordType == 379` fallback. This creates a false impression that no MCP-driven queries exist.
 
 ### CloudAppEvents RawEventData Parsing
 **Problem:** `RawEventData` in `CloudAppEvents` is a dynamic column but often contains nested JSON that requires double-parsing. Direct property access (e.g., `RawEventData.ToolName`) may return empty.  
@@ -1856,6 +1868,7 @@ For full query definitions, deployment checklist, and companion analytics rule t
 | `CloudAppEvents` table not found | Purview unified audit not available (requires E5 license). Report gap: "⚠️ CloudAppEvents not available — cannot monitor Data Lake MCP usage. Requires Microsoft 365 E5 or Purview audit." Skip Phase 3 (Data Lake MCP). |
 | CloudAppEvents returns 0 for Sentinel operations | No Data Lake MCP or Direct KQL activity in the time range. Report as "✅ No Sentinel Data Lake activity detected in CloudAppEvents." |
 | `ActionType has "Sentinel"` returns 0 but data exists | CamelCase bug — use `contains` instead of `has` for ActionType matching. See Known Pitfalls. |
+| `Operation has "Completed"` drops MCP events silently | Same CamelCase bug — `has "Completed"` returns false for ALL CamelCase operations (`SentinelAIToolRunCompleted`, `KQLQueryCompleted`). MCP events (RecordType 403) are silently dropped; Direct KQL survives only via `OR RecordType == 379` fallback. Use `contains "Completed"`. See Known Pitfalls. |
 | `RawEventData.ToolName` returns empty | Double-parse required: use `parse_json(tostring(RawEventData))` then extract fields. See Known Pitfalls. |
 | Query timeout | Reduce lookback from 30d to 7d, or add `| take 100` to intermediate results. |
 | Unknown AppId in LAQueryLogs | Cross-reference with Entra ID > App Registrations. May be a custom MCP server or third-party tool. |
@@ -1875,6 +1888,7 @@ Before presenting results, verify:
 - [ ] Two-tier governance view included: Analytics tier (LAQueryLogs) + Data Lake tier (CloudAppEvents)
 - [ ] Data Lake MCP vs Direct KQL delineation is clearly presented (RecordType 403 vs 379)
 - [ ] CloudAppEvents queries use `contains` (not `has`) for ActionType matching
+- [ ] CloudAppEvents queries use `contains` (not `has`) for `Operation` field matching (same CamelCase issue)
 - [ ] CloudAppEvents RawEventData is parsed with `parse_json(tostring(RawEventData))` pattern
 - [ ] Data Lake MCP tool call counts use `SentinelAIToolRunCompleted` only (not Started) to avoid double-counting
 - [ ] All user attribution is based on actual query results, not assumptions
