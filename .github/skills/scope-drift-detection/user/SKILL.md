@@ -351,13 +351,13 @@ SigninLogs
     DistinctResources = dcount(ResourceDisplayName),
     DistinctIPs = dcount(IPAddress),
     DistinctLocations = dcount(Location),
-    DistinctDevices = dcount(strcat(tostring(DeviceDetail.operatingSystem), "|", tostring(DeviceDetail.browser))),
+    DistinctDevices = dcount(strcat(tostring(parse_json(DeviceDetail).operatingSystem), "|", tostring(parse_json(DeviceDetail).browser))),
     FailRate = round(1.0 * countif(ResultType != "0" and ResultType != 0) / count() * 100, 2),
     Apps = make_set(AppDisplayName, 50),
     Resources = make_set(ResourceDisplayName, 50),
     IPs = make_set(IPAddress, 50),
     Locations = make_set(Location, 50),
-    Devices = make_set(strcat(tostring(DeviceDetail.operatingSystem), "|", tostring(DeviceDetail.browser)), 50)
+    Devices = make_set(strcat(tostring(parse_json(DeviceDetail).operatingSystem), "|", tostring(parse_json(DeviceDetail).browser)), 50)
     by Period
 | order by Period asc
 ```
@@ -452,8 +452,8 @@ SigninLogs
 | where RiskLevelDuringSignIn != "none" and RiskLevelDuringSignIn != ""
 | project TimeGenerated, RiskLevelDuringSignIn, RiskState, RiskEventTypes_V2,
     IPAddress, Location, AppDisplayName,
-    DeviceOS = tostring(DeviceDetail.operatingSystem),
-    Browser = tostring(DeviceDetail.browser),
+    DeviceOS = tostring(parse_json(DeviceDetail).operatingSystem),
+    Browser = tostring(parse_json(DeviceDetail).browser),
     ConditionalAccessStatus
 | order by TimeGenerated desc
 | take 20
