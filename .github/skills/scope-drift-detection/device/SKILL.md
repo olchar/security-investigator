@@ -1,6 +1,6 @@
 ---
 name: scope-drift-detection-device
-description: 'Use this skill when asked to detect scope drift, behavioral expansion, or process baseline deviation on devices or endpoints. Triggers on keywords like "device drift", "device process drift", "endpoint drift", "process baseline", "device behavioral change", or when investigating whether a device has gradually expanded its process execution beyond an established baseline. This skill builds a configurable-window behavioral baseline using DeviceProcessEvents, compares baseline with recent activity, computes a weighted Drift Score across 5 dimensions (Volume, Processes, Accounts, Process Chains, Signing Companies), and correlates with SecurityAlert, Heartbeat (for uptime corroboration), and command-line pattern analysis. Supports fleet-wide and single-device modes.'
+description: 'Use this skill when asked to detect scope drift, behavioral expansion, or process baseline deviation on devices or endpoints. Triggers on keywords like "device drift", "device process drift", "endpoint drift", "process baseline", "device behavioral change", or when investigating whether a device has gradually expanded its process execution beyond an established baseline. This skill builds a configurable-window behavioral baseline using DeviceProcessEvents, compares baseline with recent activity, computes a weighted Drift Score across 5 dimensions (Volume, Processes, Accounts, Process Chains, Signing Companies), and correlates with SecurityAlert, DeviceInfo (for uptime corroboration via MDE sensor health), and command-line pattern analysis. Supports fleet-wide and single-device modes.'
 ---
 
 # Device Scope Drift Detection — Instructions
@@ -60,7 +60,7 @@ This skill detects **scope drift** — the gradual, often imperceptible expansio
 4. **ALWAYS determine time windows** — baseline period and recent period (configurable, defaults: 6-day baseline, 1-day recent within 7-day lookback)
 5. **ALWAYS build baseline FIRST** before comparing recent activity
 6. **ALWAYS apply the low-volume denominator floor** to prevent false-positive drift scores on sparse baselines
-7. **ALWAYS correlate across all required data sources** (DeviceProcessEvents, SecurityAlert, Heartbeat)
+7. **ALWAYS correlate across all required data sources** (DeviceProcessEvents, SecurityAlert, DeviceInfo)
 8. **ALWAYS run independent queries in parallel** for performance
 9. **NEVER report a drift flag without corroborating evidence** from at least one secondary data source
 
@@ -71,7 +71,8 @@ This skill detects **scope drift** — the gradual, often imperceptible expansio
 | `DeviceProcessEvents` | ✅ Primary | Device process execution baseline |
 | `SecurityAlert` | ✅ Corroboration | Corroborating alert evidence |
 | `SecurityIncident` | ✅ Corroboration | Real alert status/classification |
-| `Heartbeat` | ✅ Corroboration | Device uptime/power-on pattern (intermittent device detection) |
+| `DeviceInfo` | ✅ Corroboration | Device uptime/power-on pattern via MDE sensor health (primary — covers all MDE-onboarded devices) |
+| `Heartbeat` | ⚡ Fallback | Device uptime for non-MDE devices with Log Analytics agent (AMA/MMA) only |
 
 ---
 
@@ -140,7 +141,7 @@ When a user requests device scope drift detection:
 5. **Apply Fleet Scaling** → Compute drift scores, rank devices, apply tiered depth limits (see [Fleet Scaling](#fleet-scaling-large-environments))
 6. **Run Phase 2** → Query 16 (first-seen processes) + Query 17 (rare process chains) — scoped to **Tier 1 + Tier 2 devices only**
 7. **Run Phase 3** → Query 18 (SecurityAlert + SecurityIncident) + Query 19 (unsigned/unusual) + Query 20 (notable command-line patterns) — scoped to **Tier 1 devices only**
-8. **Run Phase 4 (corroboration)** → Query 21 (Heartbeat) + Query 22 (per-session volume) for flagged/intermittent devices in **Tier 1**
+8. **Run Phase 4 (corroboration)** → Query 21 (DeviceInfo uptime) + Query 22 (per-session volume) for flagged/intermittent devices in **Tier 1**
 9. **Compute Final Assessment** → Combine drift scores with corroborating evidence
 10. **Output Results** → Render in selected mode(s) with tiered depth
 
@@ -182,7 +183,7 @@ After computing drift scores and ranking all devices, assign tiers:
 
 | Tier | Devices | Queries Run | Report Depth |
 |------|---------|-------------|--------------|
-| **Tier 1** (Full) | Top N by DriftScore (N = deep dive limit from table above) | All: Q16, Q17, Q18, Q19, Q20, Q21, Q22 | Full deep dive: ASCII chart, dimension table, first-seen processes, process chains, command-line patterns, alerts, heartbeat uptime |
+| **Tier 1** (Full) | Top N by DriftScore (N = deep dive limit from table above) | All: Q16, Q17, Q18, Q19, Q20, Q21, Q22 | Full deep dive: ASCII chart, dimension table, first-seen processes, process chains, command-line patterns, alerts, DeviceInfo uptime |
 | **Tier 2** (Summary) | Next 20 flagged devices (or remaining if < 20) | Q16 only (first-seen processes) | One-line summary per device: score, top 3 new processes, flag status |
 | **Tier 3** (Score only) | All remaining flagged devices | None beyond Phase 1 | Row in ranking table: device name, drift score, dimension ratios, flag emoji |
 | **Stable** | Devices ≤ 150% | None beyond Phase 1 | Omitted from deep dives. Included in fleet summary statistics only. |
@@ -289,7 +290,7 @@ This is the primary query that computes per-device behavioral profiles and drift
 
 ### Phase 4: Uptime Corroboration (For Flagged/Intermittent Devices)
 
-- **Heartbeat uptime pattern (Query 21):** For any device with a drift score near or above the 150% threshold, or any device known/suspected to be intermittently powered on, query the `Heartbeat` table to determine actual uptime days.
+- **DeviceInfo uptime pattern (Query 21):** For any device with a drift score near or above the 150% threshold, or any device known/suspected to be intermittently powered on, query the `DeviceInfo` table to determine actual uptime days via MDE sensor health state. This is the primary corroboration source and covers all MDE-onboarded devices. For non-MDE devices with only Log Analytics agent (AMA/MMA), fall back to the `Heartbeat` table using the same query pattern (substitute `DeviceInfo` → `Heartbeat`, `DeviceName` → `Computer`, `SensorHealthState` → `OSType`).
 - **Per-session process volume (Query 22):** Query `DeviceProcessEvents` per-day to show per-session event concentration. This context is critical for interpreting volume-based drift — a device that was online only 5 days out of 90 will have a diluted baseline daily average, making any recent power-on session appear as a massive volume spike.
 - **Run Queries 21+22 for flagged devices and include the uptime context in the deep dive section.**
 
@@ -301,7 +302,7 @@ This is the primary query that computes per-device behavioral profiles and drift
 4. Handle special cases:
    - **Newly onboarded devices** (no baseline = DriftScore 999) should be flagged as "New Device" rather than drift
    - **Data Lake ingestion boundaries** may cause zero recent-window activity — verify before reporting contraction
-5. For devices with elevated Volume ratio (>200%) or near-threshold DriftScore (>130%): Run Queries 21+22 (Heartbeat uptime + per-session volume) to determine if the volume spike is explained by intermittent power-on usage. If the device was only online for a small fraction of the baseline window, note as **mitigating factor**.
+5. For devices with elevated Volume ratio (>200%) or near-threshold DriftScore (>130%): Run Queries 21+22 (DeviceInfo uptime + per-session volume) to determine if the volume spike is explained by intermittent power-on usage. If the device was only online for a small fraction of the baseline window, note as **mitigating factor**.
 6. Generate risk assessment with emoji-coded findings
 7. Render output in the user's selected mode
 
@@ -562,13 +563,31 @@ DeviceProcessEvents
 - Reconnaissance commands from user accounts or unexpected contexts → investigate
 - Multiple categories of suspicious commands on the same device → high confidence indicator of compromise
 
-### Query 21: Heartbeat Uptime Pattern (Device Corroboration)
+### Query 21: DeviceInfo Uptime Pattern (Device Corroboration)
 
 ```kql
-// Corroboration query: Determine actual device uptime days from Heartbeat table
+// Corroboration query: Determine actual device uptime days from DeviceInfo table (MDE sensor)
+// DeviceInfo records entity snapshots ~hourly for MDE-onboarded devices
 // Run for the full analysis window (baseline + recent) to see power-on cadence
 // Substitute <DEVICE_NAME> with the target device hostname
 let totalDays = 97; // Intentionally wider than the drift analysis window (default 7d) to capture the device's long-term power-on cadence across 90+ days
+DeviceInfo
+| where TimeGenerated > ago(1d * totalDays)
+| where DeviceName has "<DEVICE_NAME>"
+| summarize 
+    FirstSeen = min(TimeGenerated),
+    LastSeen = max(TimeGenerated),
+    RecordCount = count(),
+    SensorHealth = take_any(SensorHealthState),
+    OnboardingStatus = take_any(OnboardingStatus)
+    by Day = bin(TimeGenerated, 1d)
+| order by Day asc
+```
+
+**Heartbeat fallback** (for non-MDE devices with Log Analytics agent only):
+```kql
+// Fallback: Use Heartbeat table when DeviceInfo returns 0 results (device not MDE-onboarded)
+let totalDays = 97;
 Heartbeat
 | where TimeGenerated > ago(1d * totalDays)
 | where Computer has "<DEVICE_NAME>"
@@ -581,11 +600,13 @@ Heartbeat
 ```
 
 **Interpretation:**
-- **Gaps between days = device was powered off.** Count the rows to determine total days online vs. the full analysis window.
+- **Gaps between days = device was powered off (or MDE sensor was inactive).** Count the rows to determine total days online vs. the full analysis window.
+- **SensorHealthState** values: `Active` (sensor reporting normally), `Inactive` (sensor not communicating), `Misconfigured` (partial telemetry). Use to assess data quality.
 - **Intermittent devices** (online <30% of baseline window) will produce artificially diluted baseline daily averages. A single power-on session will appear as a large volume spike. This is a **mathematical artifact**, not genuine drift.
 - **Consistent daily presence** confirms the baseline daily average is representative — volume spikes are more meaningful.
-- **Use case:** When a device shows elevated Volume ratio (>200%) but low Process/Account/Chain diversity ratios, check Heartbeat first. If the device was only online 5 days out of 90, the 312% volume ratio is expected.
+- **Use case:** When a device shows elevated Volume ratio (>200%) but low Process/Account/Chain diversity ratios, check DeviceInfo first. If the device was only online 5 days out of 90, the 312% volume ratio is expected.
 - **Example:** A device with 4,243 baseline events spread across only 4 power-on sessions (~40 hrs total) has a "true" daily average of ~1,060 events/session-day, not the diluted ~47 events/calendar-day. A recent session producing 1,031 events is exactly normal.
+- **Why DeviceInfo over Heartbeat:** DeviceInfo is generated by the MDE sensor (~hourly entity snapshots) and covers all Defender-onboarded devices. Heartbeat requires a Log Analytics agent (AMA/MMA) which many MDE-only devices don't have. In testing, DeviceInfo showed 28 days of coverage where Heartbeat showed only 3 days for the same device.
 
 ### Query 22: Per-Session Process Volume (Device Corroboration)
 
@@ -610,7 +631,7 @@ DeviceProcessEvents
 
 **Interpretation:**
 - **Per-session event volumes** should be compared across sessions. If each power-on session produces roughly similar event counts (600–1,500), the behavior is consistent regardless of how infrequently the device is used.
-- **SessionDuration** shows how long the device was active per day. Cross-reference with Heartbeat FirstHeartbeat/LastHeartbeat for validation.
+- **SessionDuration** shows how long the device was active per day. Cross-reference with DeviceInfo FirstSeen/LastSeen for validation.
 - **Process diversity per session** (UniqueProcesses) should be similar across sessions. If the most recent session shows 90+ unique processes and baseline sessions also show 70–90+, the diversity is normal — the same software runs each time the device boots.
 - **Use in report:** Include a power-on session table in the Flagged Device Deep Dive to contextualize why the volume ratio is elevated. Note: "Volume-driven score inflation due to intermittent usage pattern — per-session behavior is consistent with baseline sessions."
 
@@ -625,11 +646,11 @@ The inline report MUST include these sections in order:
 1. **Header** — Workspace, analysis period (baseline/recent windows), drift threshold, device count, total events
 2. **Fleet Daily Trend Table** — Day-by-day event counts, distinct processes, accounts, chains, companies
 3. **Per-Device Drift Score Ranking** — All devices sorted by DriftScore descending, with per-dimension ratios and flag status
-4. **Flagged Device Deep Dive** (for each **Tier 1** device > 150% or DriftScore=999) — Baseline vs. recent comparison, dimension bar chart, new processes, process chains, account context. For new devices (999): identify as "newly onboarded" and list all processes observed. **For devices with elevated volume ratio:** include Heartbeat uptime pattern (Query 21) and per-session volume table (Query 22) showing power-on cadence and per-session event consistency. Flag intermittent devices with: "⚠️ Intermittent device — online N of M baseline days. Volume ratio reflects power-on burst, not behavioral expansion."
+4. **Flagged Device Deep Dive** (for each **Tier 1** device > 150% or DriftScore=999) — Baseline vs. recent comparison, dimension bar chart, new processes, process chains, account context. For new devices (999): identify as "newly onboarded" and list all processes observed. **For devices with elevated volume ratio:** include DeviceInfo uptime pattern (Query 21) and per-session volume table (Query 22) showing power-on cadence and per-session event consistency. Flag intermittent devices with: "⚠️ Intermittent device — online N of M baseline days. Volume ratio reflects power-on burst, not behavioral expansion."
 5. **Tier 2 Device Summaries** (if fleet scaling applied) — One-line summary per Tier 2 device: drift score, top 3 first-seen processes, flag status. No full deep dive.
 6. **First-Seen Process Summary** — Processes appearing only in recent window, grouped by device (Tier 1 + Tier 2 devices)
 7. **Correlated Security Alerts** — SecurityAlert+SecurityIncident correlation for all analyzed devices
-8. **Uptime Context** (if applicable) — For flagged or near-threshold devices, include Heartbeat-derived power-on session table showing each session's duration, event count, and process diversity. This section contextualizes volume-driven drift scores.
+8. **Uptime Context** (if applicable) — For flagged or near-threshold devices, include DeviceInfo-derived power-on session table showing each session's duration, event count, and process diversity. This section contextualizes volume-driven drift scores.
 9. **Account Landscape** — Summary of which accounts executed processes, flagging any unexpected contexts
 10. **Notable Command-Line Patterns** — Reconnaissance/lateral movement/persistence command matches
 11. **Security Assessment** — Emoji-coded findings table with evidence citations
@@ -658,7 +679,7 @@ When outputting to markdown file, include everything from the inline format PLUS
 **Baseline Period:** <start> → <end> (<N> days)
 **Recent Period:** <start> → <end> (<N> days)
 **Drift Threshold:** 150%
-**Data Sources:** DeviceProcessEvents, SecurityAlert, SecurityIncident, Heartbeat
+**Data Sources:** DeviceProcessEvents, SecurityAlert, SecurityIncident, DeviceInfo
 **Mode:** Fleet-Wide | Single-Device (<device_name>)
 **Devices Analyzed:** <count>
 **Total Events:** <count>
@@ -730,7 +751,7 @@ Render a box-drawn chart inside a code fence. **Inner width: 58 chars** (every l
 
 #### Uptime Context (if intermittent device)
 
-<If Volume ratio >200% or device known to be intermittent, include Heartbeat-derived power-on session table>
+<If Volume ratio >200% or device known to be intermittent, include DeviceInfo-derived power-on session table>
 
 | Session | Power On | Power Off | Duration | Events | Processes |
 |---------|----------|-----------|----------|--------|-----------|
@@ -855,7 +876,7 @@ Render a single markdown table summarizing all queries executed. **Do NOT includ
 
 ### Intermittent-Use Device Volume Inflation
 **Problem:** Devices that are only powered on occasionally (e.g., once per month for maintenance, lab servers, training VMs) will have their baseline daily average diluted across the full analysis window — even though telemetry only exists for a handful of days. When one of these devices powers on during the recent window, the volume ratio can spike to 300%+ even though per-session behavior is identical to baseline sessions. This creates near-threshold or above-threshold DriftScores driven entirely by the volume dimension, with no meaningful behavioral change.
-**Solution:** For any device with Volume ratio >200% but Process/Account/Chain/Company ratios below 100%, run **Query 21 (Heartbeat uptime)** to determine actual days online. If the device was online for <30% of the baseline window (i.e., fewer than ~27 out of 90 days), flag as "⚠️ Intermittent device — volume-driven score inflation" and include a per-session comparison (Query 22). Consider reporting both the raw DriftScore and an "adjusted" assessment that contextualizes the volume dimension against actual uptime days rather than calendar days. The **diversity dimensions** (Processes, Accounts, Chains, Companies) are not affected by intermittent usage and remain reliable drift indicators.
+**Solution:** For any device with Volume ratio >200% but Process/Account/Chain/Company ratios below 100%, run **Query 21 (DeviceInfo uptime)** to determine actual days online. If the device was online for <30% of the baseline window (i.e., fewer than ~27 out of 90 days), flag as "⚠️ Intermittent device — volume-driven score inflation" and include a per-session comparison (Query 22). Consider reporting both the raw DriftScore and an "adjusted" assessment that contextualizes the volume dimension against actual uptime days rather than calendar days. The **diversity dimensions** (Processes, Accounts, Chains, Companies) are not affected by intermittent usage and remain reliable drift indicators.
 
 **Chart formatting for adjusted Volume:** In the ASCII drift chart, display only the **effective (adjusted) percentage** in the percentage column, and append the raw value in the description text after the bar. This avoids variable-width bracket content that breaks bar alignment. Example:
 ```
@@ -907,6 +928,6 @@ Before presenting results, verify:
 - [ ] Notable command-line patterns were searched (reconnaissance, lateral movement, persistence, exfiltration)
 - [ ] SecurityAlert correlation was performed for all analyzed devices
 - [ ] Baseline window length was noted and its limitations acknowledged
-- [ ] For devices with Volume ratio >200% or DriftScore >130%: Heartbeat uptime (Query 21) was checked to identify intermittent-use devices
+- [ ] For devices with Volume ratio >200% or DriftScore >130%: DeviceInfo uptime (Query 21) was checked to identify intermittent-use devices
 - [ ] Intermittent-use devices were annotated with uptime context and per-session comparison (Query 22)
 - [ ] Volume-driven drift scores on intermittent devices were contextualized as mathematical artifacts (not behavioral expansion)
